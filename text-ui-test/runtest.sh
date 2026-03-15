@@ -6,6 +6,9 @@ cd "${0%/*}"
 cd ..
 ./gradlew clean shadowJar
 
+# ensure deterministic storage state
+rm -f data/modules.txt
+
 cd text-ui-test
 
 java  -jar $(find ../build/libs/ -mindepth 1 -print -quit) < input.txt > ACTUAL.TXT

@@ -5,6 +5,9 @@ pushd %~dp0
 cd ..
 call gradlew clean shadowJar
 
+rem ensure deterministic storage state
+if exist data\modules.txt del /q data\modules.txt
+
 cd build\libs
 for /f "tokens=*" %%a in (
     'dir /b *.jar'

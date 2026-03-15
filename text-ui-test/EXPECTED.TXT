@@ -1,6 +1,6 @@
 Welcome to ModuleSync
 What would you like to do?
 Added task under CS2113:
-	1.[T][ ] Week8
+  1.[T][ ] Week8
 Now tracking 1 task(s) across modules.
 Bye. Hope to see you again!
