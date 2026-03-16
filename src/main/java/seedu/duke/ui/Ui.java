@@ -54,4 +54,14 @@ public class Ui {
             }
         }
     }
+
+    public void showTaskMarked(Task task, int taskNumber) {
+        System.out.println("Nice! I've marked this task as done:");
+        System.out.println("  " + task.formatForList(taskNumber));
+    }
+
+    public void showTaskUnmarked(Task task, int taskNumber) {
+        System.out.println("OK, I've marked this task as not done yet:");
+        System.out.println("  " + task.formatForList(taskNumber));
+    }
 }
