@@ -1,6 +1,7 @@
 package seedu.duke.parser;
 
 import seedu.duke.command.AddTodoCommand;
+import seedu.duke.command.ListCommand;
 import seedu.duke.command.Command;
 import seedu.duke.command.ExitCommand;
 import seedu.duke.exception.ModuleSyncException;
@@ -16,6 +17,9 @@ public class Parser {
         }
         if (trimmed.toLowerCase().startsWith("add")) {
             return parseAdd(trimmed);
+        }
+        if (trimmed.equalsIgnoreCase("list")) {
+            return new ListCommand();
         }
         throw new ModuleSyncException("Unknown command. Try: add /mod MOD /task TASK");
     }

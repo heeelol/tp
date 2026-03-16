@@ -3,6 +3,7 @@ package seedu.duke.ui;
 import java.util.Scanner;
 
 import seedu.duke.module.Module;
+import seedu.duke.module.ModuleBook;
 import seedu.duke.task.Task;
 
 public class Ui {
@@ -36,5 +37,21 @@ public class Ui {
         System.out.println("Added task under " + module.getCode() + ":");
         System.out.println("  " + task.formatForList(module.getTasks().size()));
         System.out.println("Now tracking " + totalTasks + " task(s) across modules.");
+    }
+
+    public void showTaskList(ModuleBook moduleBook) {
+        if (moduleBook.totalTaskCount() == 0) {
+            System.out.println("No tasks found.");
+            return;
+        }
+
+        System.out.println("Here are the tasks:");
+        int taskNumber = 1;
+        for (Module module : moduleBook.getModules()) {
+            for (Task task : module.getTasks().asUnmodifiableList()) {
+                System.out.println(task.formatForList(taskNumber));
+                taskNumber++;
+            }
+        }
     }
 }
