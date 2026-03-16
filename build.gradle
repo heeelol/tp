@@ -33,7 +33,7 @@ application {
 }
 
 shadowJar {
-    archiveBaseName.set("duke")
+    archiveBaseName.set("modulesync")
     archiveClassifier.set("")
 }
 

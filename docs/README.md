@@ -1,4 +1,4 @@
-# Duke
+# ModuleSync
 
 {Give product intro here}
 
