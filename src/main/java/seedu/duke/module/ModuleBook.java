@@ -38,7 +38,30 @@ public class ModuleBook {
                 currentIndex++;
             }
         }
+        throw new ModuleSyncException("Task number does not exist: " + displayIndex);
+    }
+
+    public Task removeTaskByDisplayIndex(int displayIndex) throws ModuleSyncException {
+        if (displayIndex <= 0) {
+            throw new ModuleSyncException("Task number must be a positive integer.");
+        }
+
+        int currentIndex = 1;
+        for (Module module : modules.values()) {
+            int moduleTaskCount = module.getTasks().size();
+            if (displayIndex >= currentIndex && displayIndex < currentIndex + moduleTaskCount) {
+                // Task is in this module
+                int indexInModule = displayIndex - currentIndex;
+                Task removedTask = module.getTasks().removeTask(indexInModule);
+                
+                // If module is empty after deletion, we could potentially remove it, 
+                // but keeping it is fine for now
+                return removedTask;
+            }
+            currentIndex += moduleTaskCount;
+        }
 
         throw new ModuleSyncException("Task number does not exist: " + displayIndex);
     }
 }
+

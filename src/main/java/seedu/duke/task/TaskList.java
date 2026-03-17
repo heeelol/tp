@@ -40,5 +40,12 @@ public class TaskList {
     public List<Task> asUnmodifiableList() {
         return Collections.unmodifiableList(tasks);
     }
+
+    public Task removeTask(int index) throws ModuleSyncException {
+        if (index < 0 || index >= tasks.size()) {
+            throw new ModuleSyncException("Task index out of bounds.");
+        }
+        return tasks.remove(index);
+    }
 }
 
