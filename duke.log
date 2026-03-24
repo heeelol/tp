@@ -6,9 +6,9 @@
   <millis>1773838817284</millis>
   <nanos>999600</nanos>
   <sequence>0</sequence>
-  <logger>seedu.duke.Duke</logger>
+  <logger>seedu.modulesync.Duke</logger>
   <level>INFO</level>
-  <class>seedu.duke.Duke</class>
+  <class>seedu.modulesync.Duke</class>
   <method>main</method>
   <thread>1</thread>
   <message>Application successfully starts</message>
