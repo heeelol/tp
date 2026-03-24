@@ -35,7 +35,8 @@ class AddTodoCommandTest {
         }
 
         @Override
-        public void showTaskAdded(seedu.modulesync.module.Module module, seedu.modulesync.task.Task task, int totalTasks) {
+        public void showTaskAdded(seedu.modulesync.module.Module module, seedu.modulesync.task.Task task,
+                                  int totalTasks) {
             // no-op to keep test output clean
         }
     }
