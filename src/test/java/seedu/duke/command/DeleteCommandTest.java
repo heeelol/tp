@@ -41,11 +41,11 @@ public class DeleteCommandTest {
 
     @Test
     void execute_validIndex_deletesTask() throws ModuleSyncException {
-        assertEquals(2, moduleBook.totalTaskCount());
+        assertEquals(2, moduleBook.countTotalTasks());
         DeleteCommand command = new DeleteCommand(1);
         command.execute(moduleBook, stubStorage, stubUi);
-        assertEquals(1, moduleBook.totalTaskCount());
-        
+        assertEquals(1, moduleBook.countTotalTasks());
+
         Task taskRemaining = moduleBook.getTaskByDisplayIndex(1);
         assertEquals("Test Task 2", taskRemaining.getDescription());
     }

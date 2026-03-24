@@ -25,6 +25,6 @@ public class AddDeadlineCommand extends Command {
         Module module = moduleBook.getOrCreate(moduleCode);
         Task task = module.addDeadline(description, by);
         storage.save(moduleBook);
-        ui.showTaskAdded(module, task, moduleBook.totalTaskCount());
+        ui.showTaskAdded(module, task, moduleBook.countTotalTasks());
     }
 }

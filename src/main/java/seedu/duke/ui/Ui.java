@@ -40,7 +40,7 @@ public class Ui {
     }
 
     public void showTaskList(ModuleBook moduleBook) {
-        if (moduleBook.totalTaskCount() == 0) {
+        if (moduleBook.countTotalTasks() == 0) {
             System.out.println("No tasks found.");
             return;
         }

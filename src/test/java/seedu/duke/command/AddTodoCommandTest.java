@@ -49,7 +49,7 @@ class AddTodoCommandTest {
         AddTodoCommand command = new AddTodoCommand("CS2113", "Week8");
         command.execute(moduleBook, storage, ui);
 
-        assertEquals(1, moduleBook.totalTaskCount());
+        assertEquals(1, moduleBook.countTotalTasks());
         assertTrue(storage.saved);
         var tasks = moduleBook.getModules().iterator().next().getTasks().asUnmodifiableList();
         assertEquals("Week8", tasks.get(0).getDescription());
