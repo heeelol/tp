@@ -1,19 +1,20 @@
 package seedu.modulesync.parser;
 
-import seedu.modulesync.command.AddTodoCommand;
-import seedu.modulesync.command.Command;
-import seedu.modulesync.command.ExitCommand;
-import seedu.modulesync.command.ListCommand;
-import seedu.modulesync.command.MarkCommand;
-import seedu.modulesync.command.UnmarkCommand;
-import seedu.modulesync.command.DeleteCommand;
-import seedu.modulesync.command.AddDeadlineCommand;
-import seedu.modulesync.exception.ModuleSyncException;
-
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
+
+import seedu.modulesync.command.AddDeadlineCommand;
+import seedu.modulesync.command.AddTodoCommand;
+import seedu.modulesync.command.Command;
+import seedu.modulesync.command.DeleteCommand;
+import seedu.modulesync.command.ExitCommand;
+import seedu.modulesync.command.ListCommand;
+import seedu.modulesync.command.ListDeadlinesCommand;
+import seedu.modulesync.command.MarkCommand;
+import seedu.modulesync.command.UnmarkCommand;
+import seedu.modulesync.exception.ModuleSyncException;
 
 /**
  * Parses raw user input strings into executable {@link Command} objects.
@@ -27,6 +28,7 @@ public class Parser {
     private static final String CMD_UNMARK = "unmark";
     private static final String CMD_DELETE = "delete";
 
+    private static final String PREFIX_DEADLINES = "/deadlines";
     private static final String PREFIX_MOD = "mod ";
     private static final String PREFIX_TASK = "task ";
     private static final String PREFIX_DUE = "due ";
@@ -71,8 +73,8 @@ public class Parser {
         if (trimmed.toLowerCase().startsWith(CMD_ADD)) {
             return parseAdd(trimmed);
         }
-        if (trimmed.equalsIgnoreCase(CMD_LIST)) {
-            return new ListCommand();
+        if (trimmed.toLowerCase().startsWith(CMD_LIST)) {
+            return parseList(trimmed);
         }
         if (trimmed.toLowerCase().startsWith(CMD_MARK)) {
             return parseMark(trimmed);
@@ -267,6 +269,29 @@ public class Parser {
         String remainder = extractRemainder(input, CMD_DELETE_LENGTH);
         int taskNumber = parseTaskNumber(remainder, CMD_DELETE);
         return new DeleteCommand(taskNumber);
+    }
+
+    /**
+     * Parses a "list" command, checking for optional filters like /deadlines.
+     *
+     * @param input the full list command string
+     * @return a {@link ListCommand} or {@link ListDeadlinesCommand} depending on filters
+     * @throws ModuleSyncException if an unknown filter is provided
+     */
+    private Command parseList(String input) throws ModuleSyncException {
+        assert input != null && !input.isEmpty() : "Input to parseList must not be null or empty";
+        String remainder = extractRemainder(input, CMD_LIST.length());
+        if (remainder.isEmpty()) {
+            Command cmd = new ListCommand();
+            assert cmd != null : "ListCommand must be created successfully";
+            return cmd;
+        }
+        if (remainder.toLowerCase().contains(PREFIX_DEADLINES.toLowerCase())) {
+            Command cmd = new ListDeadlinesCommand();
+            assert cmd != null : "ListDeadlinesCommand must be created successfully";
+            return cmd;
+        }
+        throw new ModuleSyncException("Unknown list filter. Try: list /deadlines");
     }
 
     /**

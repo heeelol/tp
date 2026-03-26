@@ -96,6 +96,77 @@ validation straightforward.
     * Cons: The `Command` layer would then need to handle user-facing error messages, blurring the
       separation of concerns between parsing and execution.
 
+//@@author Yap-Jia-Wei
+### [Feature] List Upcoming Deadlines (`list /deadlines`)
+
+#### Implementation
+
+The List Deadlines feature provides a specialized view that displays only tasks with deadlines,
+sorted chronologically from earliest to latest. This helps users plan their week by seeing
+upcoming deadlines at a glance. The feature filters out to-do tasks without deadlines and
+presents the filtered list in priority order.
+
+The feature implements the following operations:
+
+* `Parser#parseList(String)` — Parses the `list` command and checks for optional filters. When
+  `/deadlines` is detected, it returns a `ListDeadlinesCommand` instead of the regular `ListCommand`.
+* `ListDeadlinesCommand#execute(ModuleBook, Storage, Ui)` — Executes the deadline listing by
+  calling `Ui#showDeadlineList()`.
+* `Ui#showDeadlineList(ModuleBook)` — Collects all `Deadline` objects from all modules, sorts them
+  by due date in ascending order (earliest first), and displays them in a user-friendly format.
+
+Given below is the workflow for the List Deadlines feature:
+
+**Step 1.** The user inputs `list /deadlines`.
+
+**Step 2.** `ModuleSync#run()` calls `Ui#readCommand()`, which reads the raw input string from stdin.
+
+**Step 3.** `ModuleSync#run()` passes the raw string to `Parser#parse(...)`. The parser detects the
+`list` keyword and delegates to `Parser#parseList()`.
+
+**Step 4.** `Parser#parseList()` checks if the input contains `/deadlines`. If found, it instantiates
+a `ListDeadlinesCommand` and returns it; otherwise, it returns the regular `ListCommand`.
+
+**Step 5.** `ModuleSync#run()` calls `ListDeadlinesCommand#execute(moduleBook, storage, ui)`.
+
+**Step 6.** `execute()` delegates to `Ui#showDeadlineList(moduleBook)`.
+
+**Step 7.** `showDeadlineList()` iterates through all modules in the `ModuleBook` and collects all
+`Deadline` objects. For each deadline, it records the task number and module code.
+
+**Step 8.** The collected deadlines are sorted by their `LocalDateTime by` field in ascending order
+(earliest deadline first).
+
+**Step 9.** Finally, the sorted deadlines are displayed to the user, showing module code, status,
+description, due date/time, and days remaining.
+
+#### Design Considerations
+
+**Aspect: Filtering vs. separate command**
+
+* **Alternative 1 (Current choice): Use optional filter syntax `list /deadlines`.**
+    * Pros: Consistent with existing command structure. Can extend with more filters in future
+      (e.g., `list /todos`). Reduces command namespace pollution.
+    * Cons: Slightly more parsing logic in `Parser#parseList()`.
+
+* **Alternative 2: Create a separate command `deadlines` or `view-deadlines`.**
+    * Pros: Simpler parsing; no need to check for filters.
+    * Cons: Increases command count; less extensible for future filters.
+
+We chose the filter approach for consistency and extensibility.
+
+**Aspect: Sorting order for deadlines**
+
+* **Alternative 1 (Current choice): Sort by due date in ascending order (earliest first).**
+    * Pros: Users see the most urgent deadlines first, aiding prioritization.
+    * Cons: Does not highlight deadlines by urgency category (e.g., overdue vs. due soon vs. due later).
+
+* **Alternative 2: Sort by days remaining with urgency grouping (overdue, due this week, etc.).**
+    * Pros: Provides visual urgency categorization.
+    * Cons: Adds complexity to sorting logic and UI formatting.
+
+We chose ascending date order for simplicity and intuitive urgency ranking.
+
 
 ## Product scope
 ### Target user profile
