@@ -30,7 +30,7 @@ test {
 }
 
 application {
-    mainClass.set("seedu.duke.ModuleSync")
+    mainClass.set("seedu.modulesync.ModuleSync")
 }
 
 shadowJar {

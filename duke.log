@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE log SYSTEM "logger.dtd">
+<log>
+<record>
+  <date>2026-03-18T13:00:17.284999600Z</date>
+  <millis>1773838817284</millis>
+  <nanos>999600</nanos>
+  <sequence>0</sequence>
+  <logger>seedu.modulesync.Duke</logger>
+  <level>INFO</level>
+  <class>seedu.modulesync.Duke</class>
+  <method>main</method>
+  <thread>1</thread>
+  <message>Application successfully starts</message>
+</record>
+</log>

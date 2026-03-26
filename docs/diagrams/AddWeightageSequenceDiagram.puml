@@ -1,0 +1,92 @@
+@startuml AddWeightageSequenceDiagram
+
+skinparam sequenceArrowThickness 2
+skinparam roundcorner 5
+skinparam maxmessagesize 60
+skinparam sequenceParticipant underline
+
+Actor User as user
+Participant ":ModuleSync" as app
+Participant ":Ui" as ui
+Participant ":Parser" as parser
+Participant "c:AddTodoCommand" as addCommand
+Participant ":ModuleBook" as moduleBook
+Participant "m:Module" as module
+Participant ":TaskList" as taskList
+Participant "t:Todo" as todo
+Participant ":Storage" as storage
+
+user -> app : launch
+activate app
+
+app -> ui : showWelcome()
+activate ui
+ui --> app
+deactivate ui
+
+app -> ui : readCommand()
+activate ui
+user -> ui : "add /mod CS2113 /task Final Project [/w 25]"
+ui --> app : rawInput
+deactivate ui
+
+app -> parser : parse(rawInput)
+activate parser
+
+note right of parser
+  Extracts:
+  module   = "CS2113"
+  task     = "Final Project"
+  weightage = 25 (or null if /w absent)
+end note
+
+create addCommand
+parser -> addCommand : new AddTodoCommand("CS2113", "Final Project", 25)
+activate addCommand
+addCommand --> parser
+deactivate addCommand
+
+parser --> app : c (AddTodoCommand)
+deactivate parser
+
+app -> addCommand : execute(moduleBook, storage, ui)
+activate addCommand
+
+addCommand -> moduleBook : getOrCreate("CS2113")
+activate moduleBook
+moduleBook --> addCommand : m (Module)
+deactivate moduleBook
+
+addCommand -> module : addTodo("Final Project", 25)
+activate module
+
+module -> taskList : addTodo("CS2113", "Final Project", 25)
+activate taskList
+create todo
+taskList -> todo : new Todo("CS2113", "Final Project")
+activate todo
+todo --> taskList
+deactivate todo
+taskList -> todo : setWeightage(25)
+taskList --> module : t (Todo)
+deactivate taskList
+
+module --> addCommand : t (Todo)
+deactivate module
+
+addCommand -> storage : save(moduleBook)
+activate storage
+storage --> addCommand
+deactivate storage
+
+addCommand -> ui : showTaskAdded(module, task, totalCount)
+activate ui
+ui --> user : Displays added task (weightage shown only when provided)
+deactivate ui
+
+addCommand --> app
+deactivate addCommand
+
+deactivate app
+
+@enduml
