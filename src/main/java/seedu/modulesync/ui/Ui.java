@@ -65,27 +65,25 @@ public class Ui {
         }
 
         String targetModuleCode = moduleCode.toUpperCase();
-        List<String> lines = new ArrayList<>();
         int globalTaskNumber = 1;
+        boolean foundNotDoneTask = false;
 
         for (Module module : moduleBook.getModules()) {
             boolean isTargetModule = module.getCode().equals(targetModuleCode);
             for (Task task : module.getTasks().asUnmodifiableList()) {
                 if (isTargetModule && !task.isDone()) {
-                    lines.add(task.formatForList(globalTaskNumber));
+                    if (!foundNotDoneTask) {
+                        System.out.println("Here are the not done tasks for " + targetModuleCode + ":");
+                        foundNotDoneTask = true;
+                    }
+                    System.out.println(task.formatForList(globalTaskNumber));
                 }
                 globalTaskNumber++;
             }
         }
 
-        if (lines.isEmpty()) {
+        if (!foundNotDoneTask) {
             System.out.println("No not done tasks found for " + targetModuleCode + ".");
-            return;
-        }
-
-        System.out.println("Here are the not done tasks for " + targetModuleCode + ":");
-        for (String line : lines) {
-            System.out.println(line);
         }
     }
 
