@@ -69,8 +69,9 @@ public class Ui {
         int globalTaskNumber = 1;
 
         for (Module module : moduleBook.getModules()) {
+            boolean isTargetModule = module.getCode().equals(targetModuleCode);
             for (Task task : module.getTasks().asUnmodifiableList()) {
-                if (module.getCode().equals(targetModuleCode) && !task.isDone()) {
+                if (isTargetModule && !task.isDone()) {
                     lines.add(task.formatForList(globalTaskNumber));
                 }
                 globalTaskNumber++;

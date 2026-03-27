@@ -76,7 +76,7 @@ class ListCommandTest {
         System.setOut(new PrintStream(output));
 
         try {
-            ListCommand command = new ListCommand("CS2113");
+            ListNotDoneCommand command = new ListNotDoneCommand("CS2113");
             command.execute(moduleBook, storage, ui);
         } finally {
             System.setOut(originalOut);

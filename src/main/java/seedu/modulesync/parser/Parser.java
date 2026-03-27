@@ -12,6 +12,7 @@ import seedu.modulesync.command.DeleteCommand;
 import seedu.modulesync.command.ExitCommand;
 import seedu.modulesync.command.ListCommand;
 import seedu.modulesync.command.ListDeadlinesCommand;
+import seedu.modulesync.command.ListNotDoneCommand;
 import seedu.modulesync.command.MarkCommand;
 import seedu.modulesync.command.UnmarkCommand;
 import seedu.modulesync.exception.ModuleSyncException;
@@ -30,6 +31,7 @@ public class Parser {
 
     private static final String PREFIX_DEADLINES = "/deadlines";
     private static final String PREFIX_NOT_DONE = "/notdone";
+    private static final String PREFIX_LIST_MOD = "/mod";
     private static final String PREFIX_MOD = "mod ";
     private static final String PREFIX_TASK = "task ";
     private static final String PREFIX_DUE = "due ";
@@ -287,18 +289,32 @@ public class Parser {
             assert cmd != null : "ListCommand must be created successfully";
             return cmd;
         }
-        if (remainder.toLowerCase().contains(PREFIX_DEADLINES.toLowerCase())) {
+        String[] tokens = remainder.split("\\s+");
+        if (tokens.length == 1 && tokens[0].equalsIgnoreCase(PREFIX_DEADLINES)) {
             Command cmd = new ListDeadlinesCommand();
             assert cmd != null : "ListDeadlinesCommand must be created successfully";
             return cmd;
         }
-        if (remainder.toLowerCase().contains(PREFIX_NOT_DONE.toLowerCase())) {
-            String[] tokens = remainder.split("/");
-            String module = extractFieldFromTokens(tokens, PREFIX_MOD, PREFIX_MOD_LENGTH);
-            if (module == null || module.isEmpty()) {
+        if (tokens.length == 3) {
+            boolean hasNotDone = false;
+            int modFlagIndex = -1;
+            for (int i = 0; i < tokens.length; i++) {
+                if (tokens[i].equalsIgnoreCase(PREFIX_NOT_DONE)) {
+                    hasNotDone = true;
+                }
+                if (tokens[i].equalsIgnoreCase(PREFIX_LIST_MOD)) {
+                    modFlagIndex = i;
+                }
+            }
+            if (hasNotDone && modFlagIndex >= 0 && modFlagIndex + 1 < tokens.length
+                    && !tokens[modFlagIndex + 1].startsWith("/")) {
+                return new ListNotDoneCommand(tokens[modFlagIndex + 1]);
+            }
+        }
+        for (String token : tokens) {
+            if (token.equalsIgnoreCase(PREFIX_NOT_DONE) || token.equalsIgnoreCase(PREFIX_LIST_MOD)) {
                 throw new ModuleSyncException("Usage: list /notdone /mod MOD");
             }
-            return new ListCommand(module);
         }
         throw new ModuleSyncException("Unknown list filter. Try: list /deadlines or list /notdone /mod MOD");
     }
