@@ -89,4 +89,62 @@ class ListCommandTest {
         assertEquals(expected, actual);
         assertFalse(storage.saved);
     }
+
+    @Test
+    void execute_withModuleCode_printsOnlyThatModuleTasksWithoutSaving(@TempDir Path tempDir)
+            throws ModuleSyncException {
+        ModuleBook moduleBook = new ModuleBook();
+        TestStorage storage = new TestStorage(tempDir.resolve("modules.txt"));
+        Ui ui = new Ui(new java.util.Scanner(new ByteArrayInputStream(new byte[0])));
+
+        moduleBook.getOrCreate("CS2100").addTodo("Tutorial").markDone();
+        moduleBook.getOrCreate("CS2113").addTodo("Week10");
+        moduleBook.getOrCreate("CS2113").addTodo("Quiz");
+
+        ByteArrayOutputStream output = new ByteArrayOutputStream();
+        PrintStream originalOut = System.out;
+        System.setOut(new PrintStream(output));
+
+        try {
+            ListCommand command = new ListCommand("CS2113");
+            command.execute(moduleBook, storage, ui);
+        } finally {
+            System.setOut(originalOut);
+        }
+
+        String actual = output.toString(StandardCharsets.UTF_8).replace("\r\n", "\n");
+        String expected = "Here are the tasks for CS2113:\n"
+                + "2.[CS2113] [T][ ] Week10\n"
+                + "3.[CS2113] [T][ ] Quiz\n";
+
+        assertEquals(expected, actual);
+        assertFalse(storage.saved);
+    }
+
+    @Test
+    void execute_withUnknownModuleCode_printsNoSuchModuleMessageWithoutSaving(@TempDir Path tempDir)
+            throws ModuleSyncException {
+        ModuleBook moduleBook = new ModuleBook();
+        TestStorage storage = new TestStorage(tempDir.resolve("modules.txt"));
+        Ui ui = new Ui(new java.util.Scanner(new ByteArrayInputStream(new byte[0])));
+
+        moduleBook.getOrCreate("CS2113").addTodo("Week9");
+
+        ByteArrayOutputStream output = new ByteArrayOutputStream();
+        PrintStream originalOut = System.out;
+        System.setOut(new PrintStream(output));
+
+        try {
+            ListCommand command = new ListCommand("CS2100");
+            command.execute(moduleBook, storage, ui);
+        } finally {
+            System.setOut(originalOut);
+        }
+
+        String actual = output.toString(StandardCharsets.UTF_8).replace("\r\n", "\n");
+        String expected = "No such module: CS2100.\n";
+
+        assertEquals(expected, actual);
+        assertFalse(storage.saved);
+    }
 }

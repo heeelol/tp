@@ -288,22 +288,29 @@ public class Parser {
      * @throws ModuleSyncException if an unknown filter is provided
      */
     private Command parseList(String input) throws ModuleSyncException {
-        assert input != null && !input.isEmpty() : "Input to parseList must not be null or empty";
         String remainder = extractRemainder(input, CMD_LIST.length());
+
         if (remainder.isEmpty()) {
-            Command cmd = new ListCommand();
-            assert cmd != null : "ListCommand must be created successfully";
-            return cmd;
+            return new ListCommand();
         }
+
         String[] tokens = remainder.split("\\s+");
+
         if (tokens.length == 1 && tokens[0].equalsIgnoreCase(PREFIX_DEADLINES)) {
-            Command cmd = new ListDeadlinesCommand();
-            assert cmd != null : "ListDeadlinesCommand must be created successfully";
-            return cmd;
+            return new ListDeadlinesCommand();
         }
+
+        if (tokens.length == 2 && tokens[0].equalsIgnoreCase(PREFIX_LIST_MOD)) {
+            if (tokens[1].startsWith("/")) {
+                throw new ModuleSyncException("Usage: list /mod MODULE_CODE");
+            }
+            return new ListCommand(tokens[1]);
+        }
+
         if (tokens.length == 3) {
             boolean hasNotDone = false;
             int modFlagIndex = -1;
+
             for (int i = 0; i < tokens.length; i++) {
                 if (tokens[i].equalsIgnoreCase(PREFIX_NOT_DONE)) {
                     hasNotDone = true;
@@ -312,21 +319,38 @@ public class Parser {
                     modFlagIndex = i;
                 }
             }
+
             if (hasNotDone && modFlagIndex >= 0 && modFlagIndex + 1 < tokens.length
                     && !tokens[modFlagIndex + 1].startsWith("/")) {
                 return new ListNotDoneCommand(tokens[modFlagIndex + 1]);
             }
         }
+
         for (String token : tokens) {
-            // If /deadlines is combined with any other token, show a /deadlines-specific usage error.
             if (token.equalsIgnoreCase(PREFIX_DEADLINES) && tokens.length > 1) {
                 throw new ModuleSyncException("Usage: list /deadlines");
             }
-            if (token.equalsIgnoreCase(PREFIX_NOT_DONE) || token.equalsIgnoreCase(PREFIX_LIST_MOD)) {
-                throw new ModuleSyncException("Usage: list /notdone /mod MOD");
+        }
+
+        if (containsToken(tokens, PREFIX_LIST_MOD)) {
+            throw new ModuleSyncException("Usage: list /mod MODULE_CODE");
+        }
+
+        if (containsToken(tokens, PREFIX_NOT_DONE)) {
+            throw new ModuleSyncException("Usage: list /notdone /mod MOD");
+        }
+
+        throw new ModuleSyncException(
+                "Unknown list filter. Try: list, list /mod MODULE_CODE, list /deadlines or list /notdone /mod MOD");
+    }
+
+    private boolean containsToken(String[] tokens, String target) {
+        for (String token : tokens) {
+            if (token.equalsIgnoreCase(target)) {
+                return true;
             }
         }
-        throw new ModuleSyncException("Unknown list filter. Try: list /deadlines or list /notdone /mod MOD");
+        return false;
     }
 
     /**

@@ -25,6 +25,22 @@ public class ModuleBook {
     }
 
     /**
+     * Returns the module with the given module code.
+     * The lookup is case-insensitive. If the given code is null,
+     * this method returns null.
+     *
+     * @param code the module code to look up
+     * @return the matching module, or null if the code is null
+     *         or no such module exists
+     */
+    public Module getModule(String code) {
+        if (code == null) {
+            return null;
+        }
+        return modules.get(code.toUpperCase());
+    }
+
+    /**
      * Returns all modules currently tracked.
      *
      * @return a collection of all {@link Module} objects
