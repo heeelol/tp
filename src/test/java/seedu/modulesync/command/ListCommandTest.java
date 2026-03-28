@@ -60,4 +60,33 @@ class ListCommandTest {
         assertEquals(expected, actual);
         assertFalse(storage.saved);
     }
+
+    @Test
+    void execute_notDoneForModule_printsFilteredListWithoutSaving(@TempDir Path tempDir) throws ModuleSyncException {
+        ModuleBook moduleBook = new ModuleBook();
+        TestStorage storage = new TestStorage(tempDir.resolve("modules.txt"));
+        Ui ui = new Ui(new java.util.Scanner(new ByteArrayInputStream(new byte[0])));
+
+        moduleBook.getOrCreate("CS2113").addTodo("Week8");
+        moduleBook.getOrCreate("CS2113").addTodo("Week9").markDone();
+        moduleBook.getOrCreate("CS2100").addTodo("Tutorial");
+
+        ByteArrayOutputStream output = new ByteArrayOutputStream();
+        PrintStream originalOut = System.out;
+        System.setOut(new PrintStream(output));
+
+        try {
+            ListNotDoneCommand command = new ListNotDoneCommand("CS2113");
+            command.execute(moduleBook, storage, ui);
+        } finally {
+            System.setOut(originalOut);
+        }
+
+        String actual = output.toString(StandardCharsets.UTF_8).replace("\r\n", "\n");
+        String expected = "Here are the not done tasks for CS2113:\n"
+                + "1.[CS2113] [T][ ] Week8\n";
+
+        assertEquals(expected, actual);
+        assertFalse(storage.saved);
+    }
 }
