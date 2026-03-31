@@ -96,7 +96,7 @@ validation straightforward.
     * Cons: The `Command` layer would then need to handle user-facing error messages, blurring the
       separation of concerns between parsing and execution.
 
-//@@author Yap-Jia-Wei
+//@@author heeelol
 ### [Feature] List Upcoming Deadlines (`list /deadlines`)
 
 #### Implementation
