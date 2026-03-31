@@ -85,6 +85,9 @@ public class Ui {
     }
 
     public void showNotDoneTaskList(ModuleBook moduleBook, String moduleCode) {
+        assert moduleBook != null : "ModuleBook must not be null when listing not-done tasks";
+        assert moduleCode != null && !moduleCode.isBlank() : "Module code must not be null/blank when listing not-done";
+
         if (moduleBook.countTotalTasks() == 0) {
             System.out.println("No tasks found.");
             return;
@@ -185,6 +188,8 @@ public class Ui {
     }
 
     public void showTaskDeleted(Task task, int totalTasks) {
+        assert task != null : "Deleted task must not be null";
+        assert totalTasks >= 0 : "Total task count must not be negative";
         System.out.println("Noted. I've removed this task:");
         System.out.println("  [" + task.getModuleCode() + "] " + task.formatForList(0));
         System.out.println("Now you have " + totalTasks + " task(s) in the list.");

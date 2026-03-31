@@ -277,6 +277,7 @@ public class Parser {
     private Command parseDelete(String input) throws ModuleSyncException {
         String remainder = extractRemainder(input, CMD_DELETE_LENGTH);
         int taskNumber = parseTaskNumber(remainder, CMD_DELETE);
+        assert taskNumber > 0 : "Parsed task number must be strictly positive";
         return new DeleteCommand(taskNumber);
     }
 
@@ -322,7 +323,9 @@ public class Parser {
 
             if (hasNotDone && modFlagIndex >= 0 && modFlagIndex + 1 < tokens.length
                     && !tokens[modFlagIndex + 1].startsWith("/")) {
-                return new ListNotDoneCommand(tokens[modFlagIndex + 1]);
+                String moduleCode = tokens[modFlagIndex + 1];
+                assert moduleCode != null && !moduleCode.isBlank() : "Module code token must not be blank";
+                return new ListNotDoneCommand(moduleCode);
             }
         }
 
@@ -366,7 +369,11 @@ public class Parser {
             throw new ModuleSyncException("Usage: " + commandWord + " TASK_NUMBER");
         }
         try {
-            return Integer.parseInt(rawTaskNumber);
+            int value = Integer.parseInt(rawTaskNumber);
+            if (value <= 0) {
+                throw new ModuleSyncException("Task number must be a positive integer.");
+            }
+            return value;
         } catch (NumberFormatException e) {
             throw new ModuleSyncException("Task number must be a positive integer.");
         }
