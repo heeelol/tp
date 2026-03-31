@@ -168,6 +168,138 @@ We chose the filter approach for consistency and extensibility.
 We chose ascending date order for simplicity and intuitive urgency ranking.
 
 
+//@@author Yeo-Chen-Xian
+### [Feature] List Not Done Tasks by Module (`list /notdone /mod MOD`)
+
+#### Implementation
+
+The List Not Done Tasks by Module feature provides a focused view of only the unfinished tasks for a specific module.
+This reduces noise when a module has many completed tasks and makes it faster to find remaining work.
+
+This feature extends the existing `list` command using a filter syntax.
+It is implemented using the following operations:
+
+* `Parser#parseList(String)` — Detects the presence of the `/notdone` and `/mod` flags and creates a `ListNotDoneCommand`.
+* `ListNotDoneCommand#execute(ModuleBook, Storage, Ui)` — Delegates the display logic to the UI layer.
+* `Ui#showNotDoneTaskList(ModuleBook, String)` — Filters tasks for the target module and prints only tasks that are not done.
+
+An important design decision is that the not-done list keeps the same **global display indices** used by the main `list` command.
+This ensures the user can follow up with commands such as `delete`, `mark`, and `unmark` using the index they see.
+
+##### Parsing rules
+
+The parser requires the not-done filter to be used together with a module code:
+
+* Accepted forms: `list /notdone /mod CS2113` or `list /mod CS2113 /notdone`
+* Rejected forms: `list /notdone` (missing module), `list /notdone /mod` (missing module code)
+
+At the time of writing, the parser accepts this filter only when the `list` remainder has exactly three
+whitespace-delimited tokens.
+
+#### Sequence Diagram
+
+The following sequence diagram illustrates the interactions when the user executes `list /notdone /mod CS2113`:
+
+<img src="images/ListNotDoneSequenceDiagram.png" alt="Sequence diagram for list /notdone /mod" />
+
+> **Note:** The diagram above must be generated from
+> [`docs/diagrams/ListNotDoneSequenceDiagram.puml`](diagrams/ListNotDoneSequenceDiagram.puml)
+> and saved as `docs/images/ListNotDoneSequenceDiagram.png`.
+
+#### Class Diagram
+
+The following class diagram shows the main classes involved in listing not-done tasks and how they collaborate:
+
+<img src="images/ListNotDoneClassDiagram.png" alt="Class diagram for list /notdone /mod" />
+
+> **Note:** The diagram above must be generated from
+> [`docs/diagrams/ListNotDoneClassDiagram.puml`](diagrams/ListNotDoneClassDiagram.puml)
+> and saved as `docs/images/ListNotDoneClassDiagram.png`.
+
+#### Design Considerations
+
+**Aspect: Where to implement the not-done filtering**
+
+* **Alternative 1 (Current choice): Filter in `Ui#showNotDoneTaskList(...)`.**
+  * Pros: Minimal changes to model classes; view-only feature that does not affect persistence.
+  * Cons: UI becomes responsible for traversal/filtering logic; less reusable for other commands.
+
+* Alternative 2: Filter in `ModuleBook`/`TaskList` and return a structured result.
+  * Pros: Easier to reuse in future commands (e.g., `delete /notdone ...`).
+  * Cons: Requires deciding how to preserve global indices, or introducing a new indexing scheme.
+
+**Aspect: Indexing strategy for the not-done view**
+
+* **Alternative 1 (Current choice): Preserve the global indices from `list`.**
+  * Pros: Allows direct follow-up using `delete`, `mark`, and `unmark`.
+  * Cons: Indices can appear sparse in a filtered view.
+
+* Alternative 2: Renumber not-done tasks starting from 1.
+  * Pros: The filtered list looks compact.
+  * Cons: Would require separate commands or extra identifiers to refer to the original task.
+
+
+//@@author Yeo-Chen-Xian
+### [Feature] Delete Task (`delete TASK_NUMBER`)
+
+#### Implementation
+
+The Delete Task feature removes a task from the application using the **1-based display index** shown by `list`.
+After deletion, the change is persisted to disk and the UI confirms the removal.
+
+The feature is implemented using the following operations:
+
+* `Parser#parseDelete(String)` — Parses the user-supplied index and creates a `DeleteCommand`.
+* `DeleteCommand#execute(ModuleBook, Storage, Ui)` — Removes the task, saves data, and prints a confirmation.
+* `ModuleBook#removeTaskByDisplayIndex(int)` — Locates the task in global order across modules and removes it.
+* `Storage#save(ModuleBook)` — Persists the updated `ModuleBook`.
+
+Internally, the removal uses a global scan to convert a display index to a per-module index.
+This keeps the CLI simple: the user only needs the number shown by `list`.
+
+#### Sequence Diagram
+
+The following sequence diagram illustrates the interactions when the user executes `delete 3`:
+
+<img src="images/DeleteTaskSequenceDiagram.png" alt="Sequence diagram for the delete command" />
+
+> **Note:** The diagram above must be generated from
+> [`docs/diagrams/DeleteTaskSequenceDiagram.puml`](diagrams/DeleteTaskSequenceDiagram.puml)
+> and saved as `docs/images/DeleteTaskSequenceDiagram.png`.
+
+#### Class Diagram
+
+The following class diagram shows the main classes involved in deletion and how they collaborate:
+
+<img src="images/DeleteTaskClassDiagram.png" alt="Class diagram for the delete command" />
+
+> **Note:** The diagram above must be generated from
+> [`docs/diagrams/DeleteTaskClassDiagram.puml`](diagrams/DeleteTaskClassDiagram.puml)
+> and saved as `docs/images/DeleteTaskClassDiagram.png`.
+
+#### Design Considerations
+
+**Aspect: Which index should `delete` use**
+
+* **Alternative 1 (Current choice): Use the global display index shown by `list`.**
+  * Pros: Easy to learn and consistent with `mark`/`unmark`.
+  * Cons: Index depends on the current global ordering across modules.
+
+* Alternative 2: Use a module-scoped index, e.g., `delete /mod CS2113 2`.
+  * Pros: Indices remain stable within a module.
+  * Cons: More complex CLI; user must provide both module and index.
+
+**Aspect: Where to validate indices**
+
+* **Alternative 1 (Current choice): Parse integer in `Parser`, validate existence in `ModuleBook`.**
+  * Pros: Separation of concerns; model owns “does this task exist?”.
+  * Cons: Error messages may originate from different layers.
+
+* Alternative 2: Validate everything inside `DeleteCommand#execute()`.
+  * Pros: Delete-related logic concentrated in one place.
+  * Cons: Commands start duplicating model checks.
+
+
 ## Product scope
 ### Target user profile
 

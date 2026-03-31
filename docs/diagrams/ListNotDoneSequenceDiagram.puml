@@ -1,0 +1,60 @@
+@startuml ListNotDoneSequenceDiagram
+
+skinparam sequenceArrowThickness 2
+skinparam roundcorner 5
+skinparam maxmessagesize 60
+skinparam sequenceParticipant underline
+
+Actor User as user
+Participant "ModuleSync" as app
+Participant "Ui" as ui
+Participant "Parser" as parser
+Participant "ListNotDoneCommand" as cmd
+Participant "ModuleBook" as moduleBook
+Participant "Task" as task
+
+user -> app : enter "list /notdone /mod CS2113"
+activate app
+
+app -> ui : readCommand()
+activate ui
+ui --> app : rawInput
+deactivate ui
+
+app -> parser : parse(rawInput)
+activate parser
+
+note right of parser
+  Detects: list command
+  Filter: /notdone + /mod CS2113
+end note
+
+create cmd
+parser -> cmd : new ListNotDoneCommand("CS2113")
+parser --> app : cmd
+deactivate parser
+
+app -> cmd : execute(moduleBook, storage, ui)
+activate cmd
+
+cmd -> ui : showNotDoneTaskList(moduleBook, "CS2113")
+activate ui
+ui -> moduleBook : getModules()
+activate moduleBook
+moduleBook --> ui : modules
+deactivate moduleBook
+
+loop for each task across all modules
+  ui -> task : isDone()
+  task --> ui : boolean
+end
+
+ui --> user : prints only not-done tasks\n(using global list indices)
+deactivate ui
+
+cmd --> app
+deactivate cmd
+
+deactivate app
+
+@enduml

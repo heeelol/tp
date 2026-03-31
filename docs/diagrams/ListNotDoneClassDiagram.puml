@@ -1,0 +1,70 @@
+@startuml ListNotDoneClassDiagram
+
+hide circle
+skinparam classAttributeIconSize 0
+
+class ModuleSync {
+  +run(): void
+}
+
+class Parser {
+  +parse(input: String): Command
+  -parseList(input: String): Command
+}
+
+abstract class Command {
+  +execute(moduleBook: ModuleBook, storage: Storage, ui: Ui): void
+}
+
+class Storage {
+  +Storage(filePath: Path)
+  +load(): ModuleBook
+  +save(moduleBook: ModuleBook): void
+}
+
+class ListNotDoneCommand {
+  -moduleCode: String
+  +ListNotDoneCommand(moduleCode: String)
+  +execute(moduleBook: ModuleBook, storage: Storage, ui: Ui): void
+}
+
+class Ui {
+  +showNotDoneTaskList(moduleBook: ModuleBook, moduleCode: String): void
+}
+
+class ModuleBook {
+  +countTotalTasks(): int
+  +getModules(): Collection<Module>
+}
+
+class Module {
+  +getCode(): String
+  +getTasks(): TaskList
+}
+
+class TaskList {
+  +asUnmodifiableList(): List<Task>
+  +size(): int
+}
+
+class Task {
+  +isDone(): boolean
+  +formatForList(taskNumber: int): String
+}
+
+ModuleSync --> Ui
+ModuleSync --> Parser
+ModuleSync --> ModuleBook
+ModuleSync --> Storage
+ModuleSync --> Command : executes
+
+Parser ..> ListNotDoneCommand : creates
+ListNotDoneCommand --|> Command
+ListNotDoneCommand --> Ui : showNotDoneTaskList(...)
+Ui --> ModuleBook : getModules()
+
+ModuleBook "1" o-- "*" Module
+Module "1" o-- "1" TaskList
+TaskList "1" o-- "*" Task
+
+@enduml
