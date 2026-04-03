@@ -15,6 +15,7 @@ import seedu.modulesync.command.ListCommand;
 import seedu.modulesync.command.ListDeadlinesCommand;
 import seedu.modulesync.command.ListNotDoneCommand;
 import seedu.modulesync.command.MarkCommand;
+import seedu.modulesync.command.SetWeightCommand;
 import seedu.modulesync.command.UnmarkCommand;
 import seedu.modulesync.exception.ModuleSyncException;
 
@@ -31,6 +32,7 @@ public class Parser {
     private static final String CMD_MARK = "mark";
     private static final String CMD_UNMARK = "unmark";
     private static final String CMD_DELETE = "delete";
+    private static final String CMD_SETWEIGHT = "setweight";
 
     private static final String PREFIX_DEADLINES = "/deadlines";
     private static final String PREFIX_NOT_DONE = "/notdone";
@@ -44,6 +46,7 @@ public class Parser {
     private static final int CMD_MARK_LENGTH = 4;
     private static final int CMD_UNMARK_LENGTH = 6;
     private static final int CMD_DELETE_LENGTH = 6;
+    private static final int CMD_SETWEIGHT_LENGTH = 9;
 
     private static final int PREFIX_MOD_LENGTH = 4;
     private static final int PREFIX_TASK_LENGTH = 5;
@@ -93,6 +96,9 @@ public class Parser {
         }
         if (trimmed.toLowerCase().startsWith(CMD_DELETE)) {
             return parseDelete(trimmed);
+        }
+        if (trimmed.toLowerCase().startsWith(CMD_SETWEIGHT)) {
+            return parseSetWeight(trimmed);
         }
         throw new ModuleSyncException(UNKNOWN_COMMAND_MSG);
     }
@@ -279,6 +285,33 @@ public class Parser {
         int taskNumber = parseTaskNumber(remainder, CMD_DELETE);
         assert taskNumber > 0 : "Parsed task number must be strictly positive";
         return new DeleteCommand(taskNumber);
+    }
+
+    /**
+     * Parses a "setweight" command.
+     * Format: {@code setweight TASK_NUMBER PERCENT}
+     *
+     * @param input the full setweight command string
+     * @return a {@link SetWeightCommand} with the specified task number and weightage
+     * @throws ModuleSyncException if the arguments are missing, non-integer, or out of range
+     */
+    private Command parseSetWeight(String input) throws ModuleSyncException {
+        String remainder = extractRemainder(input, CMD_SETWEIGHT_LENGTH);
+        if (remainder.isEmpty()) {
+            throw new ModuleSyncException("Usage: setweight TASK_NUMBER PERCENT");
+        }
+        String[] parts = remainder.split("\\s+");
+        if (parts.length != 2) {
+            throw new ModuleSyncException("Usage: setweight TASK_NUMBER PERCENT");
+        }
+        int taskNumber = parseTaskNumber(parts[0], CMD_SETWEIGHT);
+        Integer weightage = parseWeightage(parts[1]);
+        if (weightage == null) {
+            throw new ModuleSyncException("Usage: setweight TASK_NUMBER PERCENT");
+        }
+        assert taskNumber > 0 : "Parsed task number must be strictly positive";
+        assert weightage >= 0 && weightage <= 100 : "Parsed weightage must be 0–100";
+        return new SetWeightCommand(taskNumber, weightage);
     }
 
     /**

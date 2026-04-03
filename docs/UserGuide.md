@@ -104,6 +104,23 @@ Example:
 
 * `delete 3`
 
+### Assigning weightage to an existing task: `setweight`
+Assigns or updates the percentage weightage of a task that was added without one (or to change an existing weightage).
+
+Format: `setweight TASK_NUMBER PERCENT`
+
+* `TASK_NUMBER` is the **global display index** shown by `list` or `list /mod MODULE_CODE` (1-based).
+* `PERCENT` must be an integer from `0` to `100`.
+* If the task already has a weightage, it will be overwritten and you will be told the previous value.
+
+Examples:
+
+* `setweight 3 25` — sets the weightage of task 3 to 25%
+* `setweight 7 0` — sets the weightage of task 7 to 0%
+
+> **Tip:** Run `list /mod MODULE_CODE` first to see the global task numbers for tasks in that module,
+> then use `setweight` with the number you see.
+
 ### Exiting the application: `exit`
 Closes the application and saves all data.
 
@@ -143,4 +160,5 @@ Example:
 | Mark task as done | `mark TASK_NUMBER` |
 | Unmark task as not done | `unmark TASK_NUMBER` |
 | Delete task | `delete TASK_NUMBER` |
+| Set task weightage | `setweight TASK_NUMBER PERCENT` |
 | Exit application | `bye` |

@@ -187,6 +187,25 @@ public class Ui {
         System.out.println("  " + task.formatForList(taskNumber));
     }
 
+    /**
+     * Displays a confirmation message after a task's weightage has been set or updated.
+     *
+     * @param task       the task whose weightage was changed
+     * @param taskNumber the global display index of the task
+     * @param previous   the previous weightage value, or null if none was set before
+     */
+    public void showWeightSet(Task task, int taskNumber, Integer previous) {
+        assert task != null : "Task must not be null";
+        assert taskNumber > 0 : "Task number must be positive";
+        if (previous != null) {
+            System.out.println("Updated weightage for task " + taskNumber
+                    + " (was " + previous + "%, now " + task.getWeightage() + "%):");
+        } else {
+            System.out.println("Set weightage for task " + taskNumber + ":");
+        }
+        System.out.println("  " + task.formatForList(taskNumber));
+    }
+
     public void showTaskDeleted(Task task, int totalTasks) {
         assert task != null : "Deleted task must not be null";
         assert totalTasks >= 0 : "Total task count must not be negative";
