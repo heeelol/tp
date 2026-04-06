@@ -56,6 +56,34 @@ Examples:
 * `list /mod CS2113`
 * `list /deadlines`
 
+### Listing registered modules: `modules`
+Shows a list of all modules you are currently tracking.
+
+Format: `modules`
+
+* A module is considered “registered” once you have at least one task under it.
+* The output includes the number of tasks currently tracked for each module.
+
+Example:
+
+* `modules`
+
+### Viewing semester statistics: `semesterstats`
+Shows an overall summary across all tracked modules (treated as the current semester).
+
+Format: `semesterstats`
+
+The summary includes:
+* number of modules tracked
+* number of tasks done / not done, and completion percentage
+* breakdown of todo vs deadline tasks
+* weightage completion (if any tasks have weightage)
+* a per-module workload summary
+
+Example:
+
+* `semesterstats`
+
 ### Listing not-done tasks for a module: `list /notdone`
 Shows only tasks that are not marked done for a specific module.
 
@@ -121,14 +149,14 @@ Examples:
 > **Tip:** Run `list /mod MODULE_CODE` first to see the global task numbers for tasks in that module,
 > then use `setweight` with the number you see.
 
-### Exiting the application: `exit`
-Closes the application and saves all data.
+### Exiting the application: `bye`
+Closes the application.
 
-Format: `exit`
+Format: `bye`
 
 Example:
 
-* `exit`
+* `bye`
 
 ## FAQ
 
@@ -139,6 +167,18 @@ Example:
 **Q**: Can I edit the `modules.txt` file directly?
 
 **A**: Yes, you can manually edit the `modules.txt` file as it is a plain text file. However, be careful with the format to avoid corruption. Make sure to follow the same format as the existing entries.
+
+Each task is stored as a ` | `-separated line:
+
+* Todo (unweighted): `MODULE | T | DONE_FLAG | DESCRIPTION`
+* Todo (weighted): `MODULE | T | DONE_FLAG | DESCRIPTION | WEIGHTAGE`
+* Deadline (unweighted): `MODULE | D | DONE_FLAG | DESCRIPTION | DUE_DATETIME`
+* Deadline (weighted): `MODULE | D | DONE_FLAG | DESCRIPTION | DUE_DATETIME | WEIGHTAGE`
+
+Where:
+* `DONE_FLAG` is `1` (done) or `0` (not done)
+* `DUE_DATETIME` is `yyyy-MM-dd HH:mm`
+* `WEIGHTAGE` is an integer `0` to `100`
 
 **Q**: What happens when I mark a task as done?
 
@@ -157,6 +197,8 @@ Example:
 | List tasks by module | `list /mod MODULE_CODE` |
 | List upcoming deadlines | `list /deadlines` |
 | List not-done tasks by module | `list /notdone /mod MODULE_CODE` |
+| List registered modules | `modules` |
+| View semester statistics | `semesterstats` |
 | Mark task as done | `mark TASK_NUMBER` |
 | Unmark task as not done | `unmark TASK_NUMBER` |
 | Delete task | `delete TASK_NUMBER` |

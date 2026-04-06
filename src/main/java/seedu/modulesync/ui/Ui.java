@@ -303,4 +303,112 @@ public class Ui {
         System.out.println("Got it. I've updated the deadline for this task:");
         System.out.println("  " + task.formatForList(taskNumber));
     }
+
+    /**
+     * Displays a list of all registered modules currently tracked.
+     */
+    public void showModuleList(ModuleBook moduleBook) {
+        assert moduleBook != null : "ModuleBook must not be null";
+
+        if (moduleBook.getModules().isEmpty()) {
+            System.out.println("No modules registered.");
+            return;
+        }
+
+        System.out.println("Here are your registered modules:");
+        int index = 1;
+        for (Module module : moduleBook.getModules()) {
+            System.out.println(index + ". " + module.getCode() + " (" + module.getTasks().size() + " task(s))");
+            index++;
+        }
+    }
+
+    /**
+     * Displays statistics across all modules, intended as semester-wide overview.
+     */
+    public void showSemesterStatistics(ModuleBook moduleBook) {
+        assert moduleBook != null : "ModuleBook must not be null";
+
+        int moduleCount = moduleBook.getModules().size();
+        int totalTasks = 0;
+        int doneTasks = 0;
+        int todoCount = 0;
+        int deadlineCount = 0;
+
+        int weightedTaskCount = 0;
+        int totalWeightage = 0;
+        int doneWeightage = 0;
+
+        for (Module module : moduleBook.getModules()) {
+            for (Task task : module.getTasks().asUnmodifiableList()) {
+                totalTasks++;
+                if (task.isDone()) {
+                    doneTasks++;
+                }
+                if (task instanceof Deadline) {
+                    deadlineCount++;
+                } else {
+                    todoCount++;
+                }
+                if (task.hasWeightage()) {
+                    weightedTaskCount++;
+                    totalWeightage += task.getWeightage();
+                    if (task.isDone()) {
+                        doneWeightage += task.getWeightage();
+                    }
+                }
+            }
+        }
+
+        if (moduleCount == 0) {
+            System.out.println("No modules registered. Add tasks first to see semester statistics.");
+            return;
+        }
+
+        System.out.println("Semester statistics:");
+        System.out.println("Modules: " + moduleCount);
+
+        int notDoneTasks = totalTasks - doneTasks;
+        int completionPercent = totalTasks == 0 ? 0 : (doneTasks * 100) / totalTasks;
+        System.out.println("Tasks: " + totalTasks + " total | " + doneTasks + " done | " + notDoneTasks
+                + " not done | Completion: " + completionPercent + "%");
+        System.out.println("Types: " + todoCount + " todo(s) | " + deadlineCount + " deadline(s)");
+
+        if (totalWeightage > 0) {
+            int weightedCompletion = (doneWeightage * 100) / totalWeightage;
+            System.out.println("Weightage: " + doneWeightage + "/" + totalWeightage + " completed ("
+                    + weightedCompletion + "%) across " + weightedTaskCount + " weighted task(s)");
+        } else {
+            System.out.println("Weightage: n/a (no weightage set)");
+        }
+
+        System.out.println("Work distribution by module:");
+        int index = 1;
+        for (Module module : moduleBook.getModules()) {
+            int moduleTotal = module.getTasks().size();
+            int moduleDone = 0;
+            int moduleWeightTotal = 0;
+            int moduleWeightDone = 0;
+
+            for (Task task : module.getTasks().asUnmodifiableList()) {
+                if (task.isDone()) {
+                    moduleDone++;
+                }
+                if (task.hasWeightage()) {
+                    moduleWeightTotal += task.getWeightage();
+                    if (task.isDone()) {
+                        moduleWeightDone += task.getWeightage();
+                    }
+                }
+            }
+
+            String weightSummary = moduleWeightTotal > 0
+                    ? ("weightage " + moduleWeightDone + "/" + moduleWeightTotal)
+                    : "weightage n/a";
+
+            System.out.println(index + ". " + module.getCode() + ": " + moduleTotal + " task(s) | done "
+                    + moduleDone + " | " + weightSummary);
+            index++;
+        }
+    }
 }

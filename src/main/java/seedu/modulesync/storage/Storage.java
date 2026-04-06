@@ -28,6 +28,10 @@ public class Storage {
     private static final int DATE_ONLY_LENGTH = 10;
     private static final int MIN_TASK_FIELDS = 4;
     private static final int MIN_DEADLINE_FIELDS = 5;
+    private static final int TODO_FIELDS_WITHOUT_WEIGHTAGE = 4;
+    private static final int TODO_FIELDS_WITH_WEIGHTAGE = 5;
+    private static final int DEADLINE_FIELDS_WITHOUT_WEIGHTAGE = 5;
+    private static final int DEADLINE_FIELDS_WITH_WEIGHTAGE = 6;
     private static final int FIELD_MODULE = 0;
     private static final int FIELD_TYPE = 1;
     private static final int FIELD_DONE = 2;
@@ -112,14 +116,32 @@ public class Storage {
         boolean isDone = parseDone(parts[FIELD_DONE]);
         String description = parts[FIELD_DESC];
 
+        Task task;
         switch (type) {
         case "T":
-            return new Todo(moduleCode, description, isDone);
+            task = decodeTodoTask(parts, moduleCode, description, isDone, line);
+            break;
         case "D":
-            return decodeDeadlineTask(parts, moduleCode, description, isDone, line);
+            task = decodeDeadlineTask(parts, moduleCode, description, isDone, line);
+            break;
         default:
             throw new ModuleSyncException("Unsupported task type: " + type);
         }
+        assert task != null : "Decoded task must not be null";
+        return task;
+    }
+
+    private Task decodeTodoTask(String[] parts, String moduleCode,
+                                String description, boolean isDone, String rawLine) throws ModuleSyncException {
+        if (parts.length != TODO_FIELDS_WITHOUT_WEIGHTAGE && parts.length != TODO_FIELDS_WITH_WEIGHTAGE) {
+            throw new ModuleSyncException("Corrupted task entry: " + rawLine);
+        }
+        Todo todo = new Todo(moduleCode, description, isDone);
+        if (parts.length == TODO_FIELDS_WITH_WEIGHTAGE) {
+            int weightage = parseWeightage(parts[TODO_FIELDS_WITHOUT_WEIGHTAGE], rawLine);
+            todo.setWeightage(weightage);
+        }
+        return todo;
     }
 
     /**
@@ -138,11 +160,31 @@ public class Storage {
         if (parts.length < MIN_DEADLINE_FIELDS) {
             throw new ModuleSyncException("Corrupted deadline entry: " + rawLine);
         }
+        if (parts.length != DEADLINE_FIELDS_WITHOUT_WEIGHTAGE && parts.length != DEADLINE_FIELDS_WITH_WEIGHTAGE) {
+            throw new ModuleSyncException("Corrupted deadline entry: " + rawLine);
+        }
         try {
             LocalDateTime byDate = parseDueDate(parts[FIELD_DUE]);
-            return new Deadline(moduleCode, description, isDone, byDate);
+            Deadline deadline = new Deadline(moduleCode, description, isDone, byDate);
+            if (parts.length == DEADLINE_FIELDS_WITH_WEIGHTAGE) {
+                int weightage = parseWeightage(parts[DEADLINE_FIELDS_WITHOUT_WEIGHTAGE], rawLine);
+                deadline.setWeightage(weightage);
+            }
+            return deadline;
         } catch (DateTimeParseException e) {
             throw new ModuleSyncException("Corrupted deadline date in entry: " + rawLine);
+        }
+    }
+
+    private int parseWeightage(String raw, String rawLine) throws ModuleSyncException {
+        try {
+            int value = Integer.parseInt(raw.trim());
+            if (value < 0 || value > 100) {
+                throw new ModuleSyncException("Corrupted weightage in entry: " + rawLine);
+            }
+            return value;
+        } catch (NumberFormatException e) {
+            throw new ModuleSyncException("Corrupted weightage in entry: " + rawLine);
         }
     }
 

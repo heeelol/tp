@@ -6,7 +6,9 @@ import org.junit.jupiter.api.Test;
 
 import seedu.modulesync.command.AddTodoCommand;
 import seedu.modulesync.command.ListNotDoneCommand;
+import seedu.modulesync.command.ListModulesCommand;
 import seedu.modulesync.command.MarkCommand;
+import seedu.modulesync.command.SemesterStatsCommand;
 import seedu.modulesync.command.UnmarkCommand;
 import seedu.modulesync.exception.ModuleSyncException;
 
@@ -59,5 +61,12 @@ class ParserTest {
     void parse_listNotDoneTypo_throws() {
         Parser parser = new Parser();
         assertThrows(ModuleSyncException.class, () -> parser.parse("list /notdonee /mod CS2113"));
+    }
+
+    @Test
+    void parse_modulesAndSemesterStats_returnsCorrectCommands() throws ModuleSyncException {
+        Parser parser = new Parser();
+        assertTrue(parser.parse("modules") instanceof ListModulesCommand);
+        assertTrue(parser.parse("semesterstats") instanceof SemesterStatsCommand);
     }
 }

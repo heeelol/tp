@@ -69,11 +69,22 @@ public abstract class Task {
     }
 
     public String encode() {
+        java.util.List<String> fields = new java.util.ArrayList<>();
+        fields.add(moduleCode);
+        fields.add(String.valueOf(getTypeCode()));
+        fields.add(isDone ? "1" : "0");
+        fields.add(description);
+
         String extra = encodeExtra();
-        if (extra.isEmpty()) {
-            return String.join(" | ", moduleCode, String.valueOf(getTypeCode()), isDone ? "1" : "0", description);
+        if (!extra.isEmpty()) {
+            fields.add(extra);
         }
-        return String.join(" | ", moduleCode, String.valueOf(getTypeCode()), isDone ? "1" : "0", description, extra);
+
+        if (hasWeightage()) {
+            fields.add(String.valueOf(weightage));
+        }
+
+        return String.join(" | ", fields);
     }
 
     protected String encodeExtra() {

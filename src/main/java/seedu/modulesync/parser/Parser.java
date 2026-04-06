@@ -13,9 +13,11 @@ import seedu.modulesync.command.DeleteCommand;
 import seedu.modulesync.command.ExitCommand;
 import seedu.modulesync.command.ListCommand;
 import seedu.modulesync.command.ListDeadlinesCommand;
+import seedu.modulesync.command.ListModulesCommand;
 import seedu.modulesync.command.ListNotDoneCommand;
 import seedu.modulesync.command.ListTopCommand;
 import seedu.modulesync.command.MarkCommand;
+import seedu.modulesync.command.SemesterStatsCommand;
 import seedu.modulesync.command.SetDeadlineCommand;
 import seedu.modulesync.command.SetWeightCommand;
 import seedu.modulesync.command.UnmarkCommand;
@@ -36,6 +38,8 @@ public class Parser {
     private static final String CMD_DELETE = "delete";
     private static final String CMD_SETWEIGHT = "setweight";
     private static final String CMD_SETDEADLINE = "setdeadline";
+    private static final String CMD_MODULES = "modules";
+    private static final String CMD_SEMESTER_STATS = "semesterstats";
 
     private static final String PREFIX_DEADLINES = "/deadlines";
     private static final String PREFIX_NOT_DONE = "/notdone";
@@ -86,6 +90,12 @@ public class Parser {
         }
         if (trimmed.equalsIgnoreCase(CMD_CHECK_URGENT) || trimmed.equalsIgnoreCase(CMD_ALT_CHECK_URGENT)) {
             return new CheckUrgentCommand();
+        }
+        if (trimmed.equalsIgnoreCase(CMD_MODULES)) {
+            return new ListModulesCommand();
+        }
+        if (trimmed.equalsIgnoreCase(CMD_SEMESTER_STATS)) {
+            return new SemesterStatsCommand();
         }
         if (trimmed.toLowerCase().startsWith(CMD_ADD)) {
             return parseAdd(trimmed);

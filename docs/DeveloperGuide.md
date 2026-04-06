@@ -300,6 +300,115 @@ The following class diagram shows the main classes involved in deletion and how 
   * Cons: Commands start duplicating model checks.
 
 
+//@@author Notchennie1
+### [Feature] List Registered Modules (`modules`)
+
+#### Implementation
+
+The List Registered Modules feature provides a quick overview of which modules the user is currently tracking.
+In ModuleSync, modules are represented implicitly: a module exists once at least one task has been added under it.
+
+This feature is implemented using the following operations:
+
+* `Parser#parse(String)` — Recognises the `modules` keyword and creates a `ListModulesCommand`.
+* `ListModulesCommand#execute(ModuleBook, Storage, Ui)` — Delegates display logic to the UI.
+* `Ui#showModuleList(ModuleBook)` — Iterates the `ModuleBook` and prints each module code with its task count.
+
+This command is view-only and does not modify any stored data.
+
+#### Sequence Diagram
+
+The following sequence diagram illustrates the interactions when the user executes `modules`:
+
+<img src="images/ListModulesSequenceDiagram.png" alt="Sequence diagram for the modules command" />
+
+> **Note:** The diagram above must be generated from
+> [`docs/diagrams/ListModulesSequenceDiagram.puml`](diagrams/ListModulesSequenceDiagram.puml)
+> and saved as `docs/images/ListModulesSequenceDiagram.png`.
+
+#### Class Diagram
+
+The following class diagram shows the main classes involved in listing modules and how they collaborate:
+
+<img src="images/ListModulesClassDiagram.png" alt="Class diagram for the modules command" />
+
+> **Note:** The diagram above must be generated from
+> [`docs/diagrams/ListModulesClassDiagram.puml`](diagrams/ListModulesClassDiagram.puml)
+> and saved as `docs/images/ListModulesClassDiagram.png`.
+
+#### Design Considerations
+
+**Aspect: What is considered a “registered module”**
+
+* **Alternative 1 (Current choice): Modules are created lazily when tasks are added.**
+  * Pros: No separate “register module” workflow; data model stays simple.
+  * Cons: A module cannot exist without at least one task.
+
+* Alternative 2: Introduce explicit module registration (e.g., `addmodule CS2113`).
+  * Pros: Allows empty modules.
+  * Cons: Adds a new command and persistence requirements for modules without tasks.
+
+
+//@@author Notchennie1
+### [Feature] Semester Statistics (`semesterstats`)
+
+#### Implementation
+
+The Semester Statistics feature provides a semester-wide summary across all tracked modules so that the user can
+evaluate overall progress and workload distribution.
+
+The current implementation treats the set of modules currently stored in the `ModuleBook` as the current semester.
+Statistics are computed on-demand from in-memory data.
+
+This feature is implemented using the following operations:
+
+* `Parser#parse(String)` — Recognises the `semesterstats` keyword and creates a `SemesterStatsCommand`.
+* `SemesterStatsCommand#execute(ModuleBook, Storage, Ui)` — Delegates the computation and display to the UI.
+* `Ui#showSemesterStatistics(ModuleBook)` — Aggregates per-task and per-module counts:
+  total tasks, done tasks, task type counts (todo vs deadline), and optional weightage-based completion.
+
+This command is view-only and does not modify any stored data.
+
+#### Sequence Diagram
+
+The following sequence diagram illustrates the interactions when the user executes `semesterstats`:
+
+<img src="images/SemesterStatsSequenceDiagram.png" alt="Sequence diagram for the semesterstats command" />
+
+> **Note:** The diagram above must be generated from
+> [`docs/diagrams/SemesterStatsSequenceDiagram.puml`](diagrams/SemesterStatsSequenceDiagram.puml)
+> and saved as `docs/images/SemesterStatsSequenceDiagram.png`.
+
+#### Class Diagram
+
+The following class diagram shows the main classes involved in computing semester statistics:
+
+<img src="images/SemesterStatsClassDiagram.png" alt="Class diagram for the semesterstats command" />
+
+> **Note:** The diagram above must be generated from
+> [`docs/diagrams/SemesterStatsClassDiagram.puml`](diagrams/SemesterStatsClassDiagram.puml)
+> and saved as `docs/images/SemesterStatsClassDiagram.png`.
+
+#### Design Considerations
+
+**Aspect: Where to compute statistics**
+
+* **Alternative 1 (Current choice): Compute in `Ui#showSemesterStatistics(...)`.**
+  * Pros: Feature remains view-only; minimal model changes.
+  * Cons: Aggregation logic lives in UI and is less reusable for future commands.
+
+* Alternative 2: Compute in a dedicated statistics model/service (e.g., `SemesterStats` class).
+  * Pros: Cleaner separation and easier to test/extend.
+  * Cons: Adds extra classes/indirection for a small feature.
+
+**Aspect: Weightage-based completion**
+
+* **Alternative 1 (Current choice): Treat weightage as optional and compute completion only when present.**
+  * Pros: Works for both weighted and unweighted tasks.
+  * Cons: The weightage completion metric may be absent until the user assigns weightage.
+
+
+
 ## Product scope
 ### Target user profile
 

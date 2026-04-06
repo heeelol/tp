@@ -1,0 +1,57 @@
+@startuml ListModulesClassDiagram
+
+hide circle
+skinparam classAttributeIconSize 0
+
+class ModuleSync {
+  +run(): void
+}
+
+class Parser {
+  +parse(input: String): Command
+}
+
+abstract class Command {
+  +execute(moduleBook: ModuleBook, storage: Storage, ui: Ui): void
+}
+
+class ListModulesCommand {
+  +execute(moduleBook: ModuleBook, storage: Storage, ui: Ui): void
+}
+
+class Ui {
+  +showModuleList(moduleBook: ModuleBook): void
+}
+
+class ModuleBook {
+  +getModules(): Collection<Module>
+}
+
+class Module {
+  +getCode(): String
+  +getTasks(): TaskList
+}
+
+class TaskList {
+  +size(): int
+}
+
+class Storage {
+  +save(moduleBook: ModuleBook): void
+}
+
+ModuleSync --> Ui
+ModuleSync --> Parser
+ModuleSync --> ModuleBook
+ModuleSync --> Storage
+ModuleSync --> Command : executes
+
+Parser ..> ListModulesCommand : creates
+ListModulesCommand --|> Command
+ListModulesCommand --> Ui : showModuleList(...)
+Ui --> ModuleBook : getModules()
+
+ModuleBook "1" o-- "*" Module
+Module "1" o-- "1" TaskList
+
+@enduml

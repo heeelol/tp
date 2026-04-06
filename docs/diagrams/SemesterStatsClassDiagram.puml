@@ -1,0 +1,71 @@
+@startuml SemesterStatsClassDiagram
+
+hide circle
+skinparam classAttributeIconSize 0
+
+class ModuleSync {
+  +run(): void
+}
+
+class Parser {
+  +parse(input: String): Command
+}
+
+abstract class Command {
+  +execute(moduleBook: ModuleBook, storage: Storage, ui: Ui): void
+}
+
+class SemesterStatsCommand {
+  +execute(moduleBook: ModuleBook, storage: Storage, ui: Ui): void
+}
+
+class Ui {
+  +showSemesterStatistics(moduleBook: ModuleBook): void
+}
+
+class ModuleBook {
+  +getModules(): Collection<Module>
+}
+
+class Module {
+  +getCode(): String
+  +getTasks(): TaskList
+}
+
+class TaskList {
+  +asUnmodifiableList(): List<Task>
+  +size(): int
+}
+
+class Task {
+  +isDone(): boolean
+  +hasWeightage(): boolean
+  +getWeightage(): Integer
+}
+
+class Deadline
+class Todo
+
+Task <|-- Deadline
+Task <|-- Todo
+
+class Storage {
+  +save(moduleBook: ModuleBook): void
+}
+
+ModuleSync --> Ui
+ModuleSync --> Parser
+ModuleSync --> ModuleBook
+ModuleSync --> Storage
+ModuleSync --> Command : executes
+
+Parser ..> SemesterStatsCommand : creates
+SemesterStatsCommand --|> Command
+SemesterStatsCommand --> Ui : showSemesterStatistics(...)
+Ui --> ModuleBook : getModules()
+
+ModuleBook "1" o-- "*" Module
+Module "1" o-- "1" TaskList
+TaskList "1" o-- "*" Task
+
+@enduml
