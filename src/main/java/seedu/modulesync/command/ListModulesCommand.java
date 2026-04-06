@@ -10,6 +10,11 @@ import seedu.modulesync.ui.Ui;
 public class ListModulesCommand extends Command {
 
     @Override
+    public boolean isMutating() {
+        return false;
+    }
+
+    @Override
     public void execute(ModuleBook moduleBook, Storage storage, Ui ui) {
         assert moduleBook != null : "ModuleBook must not be null";
         assert ui != null : "Ui must not be null";

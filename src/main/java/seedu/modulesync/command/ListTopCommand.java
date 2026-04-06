@@ -20,6 +20,11 @@ public class ListTopCommand extends Command {
     }
 
     @Override
+    public boolean isMutating() {
+        return false;
+    }
+
+    @Override
     public void execute(ModuleBook moduleBook, Storage storage, Ui ui) {
         ui.showTopUrgentTasks(moduleBook, topCount);
     }

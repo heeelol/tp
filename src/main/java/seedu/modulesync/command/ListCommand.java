@@ -20,6 +20,11 @@ public class ListCommand extends Command {
     }
 
     @Override
+    public boolean isMutating() {
+        return false;
+    }
+
+    @Override
     public void execute(ModuleBook moduleBook, Storage storage, Ui ui) {
         if (moduleCode == null) {
             ui.showTaskList(moduleBook);

@@ -44,6 +44,11 @@ public class StatsCommand extends Command {
         this.moduleCode = moduleCode.toUpperCase();
     }
 
+    @Override
+    public boolean isMutating() {
+        return false;
+    }
+
     /**
      * Executes the stats command by computing and displaying statistics for the module.
      *

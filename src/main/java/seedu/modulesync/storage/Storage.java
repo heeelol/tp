@@ -50,6 +50,60 @@ public class Storage {
     }
 
     /**
+     * Loads all tasks from the storage file, skipping any lines that begin with {@code #}
+     * (used as header / metadata lines by {@link SemesterStorage}).
+     *
+     * @return a populated {@link ModuleBook}, or an empty one if the file does not exist
+     * @throws ModuleSyncException if the file cannot be read
+     */
+    public ModuleBook loadSkippingHeaders() throws ModuleSyncException {
+        ModuleBook moduleBook = new ModuleBook();
+        if (!Files.exists(filePath)) {
+            return moduleBook;
+        }
+        try {
+            List<String> lines = Files.readAllLines(filePath, StandardCharsets.UTF_8);
+            for (String line : lines) {
+                if (line.trim().isEmpty() || line.trim().startsWith("#")) {
+                    continue;
+                }
+                Task task = decodeTask(line);
+                Module module = moduleBook.getOrCreate(task.getModuleCode());
+                module.getTasks().add(task);
+            }
+            return moduleBook;
+        } catch (IOException e) {
+            throw new ModuleSyncException("Failed to read storage file: " + e.getMessage());
+        }
+    }
+
+    /**
+     * Saves all tasks in the given {@link ModuleBook} to the storage file,
+     * optionally writing a header line (e.g. {@code #archived}) as the first line.
+     *
+     * @param moduleBook the module book to persist
+     * @param header     an optional header line (e.g. {@code "#archived"}), or {@code null} for none
+     * @throws ModuleSyncException if the file cannot be written
+     */
+    public void saveWithHeader(ModuleBook moduleBook, String header) throws ModuleSyncException {
+        ensureParentDirectory();
+        List<String> lines = new ArrayList<>();
+        if (header != null && !header.isEmpty()) {
+            lines.add(header);
+        }
+        for (Module module : moduleBook.getModules()) {
+            for (Task task : module.getTasks().asUnmodifiableList()) {
+                lines.add(task.encode());
+            }
+        }
+        try {
+            Files.write(filePath, lines, StandardCharsets.UTF_8);
+        } catch (IOException e) {
+            throw new ModuleSyncException("Failed to save tasks: " + e.getMessage());
+        }
+    }
+
+    /**
      * Loads all tasks from the storage file and returns a populated {@link ModuleBook}.
      *
      * @return a {@link ModuleBook} loaded from disk, or an empty one if the file does not exist

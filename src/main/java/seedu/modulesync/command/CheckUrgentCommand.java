@@ -24,6 +24,11 @@ public class CheckUrgentCommand extends Command {
     public static final String ALT_COMMAND_WORD = "/urgent";
 
     @Override
+    public boolean isMutating() {
+        return false;
+    }
+
+    @Override
     public void execute(ModuleBook moduleBook, Storage storage, Ui ui) throws ModuleSyncException {
         LocalDateTime now = LocalDateTime.now();
         LocalDateTime limit = now.plusHours(48);

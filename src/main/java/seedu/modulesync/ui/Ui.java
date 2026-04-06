@@ -6,6 +6,8 @@ import java.util.Scanner;
 
 import seedu.modulesync.module.Module;
 import seedu.modulesync.module.ModuleBook;
+import seedu.modulesync.semester.Semester;
+import seedu.modulesync.semester.SemesterBook;
 import seedu.modulesync.task.Deadline;
 import seedu.modulesync.task.Task;
 
@@ -456,6 +458,101 @@ public class Ui {
 
             System.out.println(index + ". " + module.getCode() + ": " + moduleTotal + " task(s) | done "
                     + moduleDone + " | " + weightSummary);
+            index++;
+        }
+    }
+
+    // -------------------------------------------------------------------------
+    // Semester-aware UI methods (for teammates' semester commands)
+    // -------------------------------------------------------------------------
+
+    /**
+     * Displays the currently active semester on startup or on request.
+     *
+     * @param semesterBook the semester book containing the active semester
+     */
+    //@@author Huang-Hau-Shuan
+    public void showCurrentSemester(SemesterBook semesterBook) {
+        String name = semesterBook.getCurrentSemesterName();
+        if (name == null) {
+            System.out.println("No active semester. Use 'semester switch SEMESTER_NAME' to begin.");
+            return;
+        }
+        try {
+            boolean readOnly = semesterBook.isCurrentSemesterReadOnly();
+            System.out.println("Active semester: " + name + (readOnly ? " [archived — read-only]" : ""));
+        } catch (seedu.modulesync.exception.ModuleSyncException e) {
+            System.out.println("Active semester: " + name);
+        }
+    }
+
+    /**
+     * Displays a rejection message when a mutating command is attempted in a read-only semester.
+     *
+     * @param semesterName the name of the currently archived semester
+     */
+    public void showReadOnlySemesterError(String semesterName) {
+        assert semesterName != null : "Semester name must not be null for read-only error";
+        System.out.println("Error: Semester '" + semesterName
+                + "' is archived and read-only. Use 'semester switch SEMESTER_NAME' to switch "
+                + "to an active semester, or unarchive this one first.");
+    }
+
+    /**
+     * Displays a confirmation after switching to (or creating) a semester.
+     *
+     * @param semesterName the semester switched to
+     * @param created      {@code true} if a new semester was created; {@code false} if existing
+     */
+    public void showSemesterSwitched(String semesterName, boolean created) {
+        assert semesterName != null && !semesterName.isBlank() : "Semester name must not be blank";
+        if (created) {
+            System.out.println("Created and switched to new semester: " + semesterName);
+        } else {
+            System.out.println("Switched to semester: " + semesterName);
+        }
+    }
+
+    /**
+     * Displays a confirmation after archiving the current semester.
+     *
+     * @param semesterName the name of the archived semester
+     */
+    public void showSemesterArchived(String semesterName) {
+        assert semesterName != null : "Semester name must not be null";
+        System.out.println("Semester '" + semesterName + "' has been archived. It is now read-only.");
+        System.out.println("Use 'semester switch SEMESTER_NAME' to move to another semester.");
+    }
+
+    /**
+     * Displays a confirmation after unarchiving a semester.
+     *
+     * @param semesterName the name of the unarchived semester
+     */
+    public void showSemesterUnarchived(String semesterName) {
+        assert semesterName != null : "Semester name must not be null";
+        System.out.println("Semester '" + semesterName + "' has been unarchived and is now editable.");
+    }
+
+    /**
+     * Displays all semesters registered in the semester book,
+     * indicating which is active and which are archived.
+     *
+     * @param semesterBook the semester book to display
+     */
+    public void showSemesterList(SemesterBook semesterBook) {
+        assert semesterBook != null : "SemesterBook must not be null";
+        if (!semesterBook.hasSemesters()) {
+            System.out.println("No semesters registered.");
+            return;
+        }
+        String currentName = semesterBook.getCurrentSemesterName();
+        System.out.println("Your semesters:");
+        int index = 1;
+        for (Semester semester : semesterBook.getAllSemesters()) {
+            String marker = semester.getName().equals(currentName) ? " <- current" : "";
+            String status = semester.isArchived() ? "[archived]" : "[active]";
+            System.out.println(index + ". " + semester.getName() + " " + status + marker);
             index++;
         }
     }

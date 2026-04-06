@@ -23,6 +23,8 @@ import seedu.modulesync.command.SetWeightCommand;
 import seedu.modulesync.command.StatsCommand;
 import seedu.modulesync.command.UnmarkCommand;
 import seedu.modulesync.exception.ModuleSyncException;
+import seedu.modulesync.semester.SemesterBook;
+import seedu.modulesync.storage.SemesterStorage;
 
 /**
  * Parses raw user input strings into executable {@link Command} objects.
@@ -75,6 +77,30 @@ public class Parser {
     private static final String DATETIME_FORMAT = "yyyy-MM-dd HHmm";
     private static final String ADD_USAGE = "Usage: add /mod MOD /task DESCRIPTION [/due YYYY-MM-DD]";
     private static final String UNKNOWN_COMMAND_MSG = "Unknown command. Try: add /mod MOD /task TASK";
+
+    /** Held so semester-level commands can be constructed with the shared context. */
+    private final SemesterBook semesterBook;
+    private final SemesterStorage semesterStorage;
+
+    /**
+     * Constructs a Parser with semester context for constructing semester-level commands.
+     *
+     * @param semesterBook    the application's semester book
+     * @param semesterStorage the semester-level storage
+     */
+    public Parser(SemesterBook semesterBook, SemesterStorage semesterStorage) {
+        this.semesterBook = semesterBook;
+        this.semesterStorage = semesterStorage;
+    }
+
+    /**
+     * No-arg constructor for use in tests.
+     * Semester-level commands are not available when constructed this way.
+     */
+    public Parser() {
+        this.semesterBook = null;
+        this.semesterStorage = null;
+    }
 
     /**
      * Parses the given raw input string and returns the corresponding {@link Command}.
