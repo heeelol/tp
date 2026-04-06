@@ -163,6 +163,89 @@ public class Ui {
     }
 
     /**
+     * Displays the top X most urgent tasks, sorted by weightage (descending) and then by deadline (ascending).
+     * 
+     * @param moduleBook the collection of modules and tasks
+     * @param topCount   the number of top urgent tasks to display
+     */
+    public void showTopUrgentTasks(ModuleBook moduleBook, int topCount) {
+        if (moduleBook.countTotalTasks() == 0) {
+            System.out.println("No tasks found.");
+            return;
+        }
+
+        List<UrgentTaskEntry> urgentTasks = new ArrayList<>();
+        int globalTaskNumber = 1;
+
+        // Collect all tasks with their metadata
+        for (Module module : moduleBook.getModules()) {
+            assert module != null : "Module retrieved from ModuleBook must not be null";
+            for (Task task : module.getTasks().asUnmodifiableList()) {
+                assert task != null : "Task retrieved from TaskList must not be null";
+                int weightage = task.hasWeightage() ? task.getWeightage() : 0;
+                long daysLeft = Long.MAX_VALUE;
+                if (task instanceof Deadline) {
+                    daysLeft = ((Deadline) task).getDaysLeft();
+                }
+                urgentTasks.add(new UrgentTaskEntry(task, globalTaskNumber, weightage, daysLeft));
+                globalTaskNumber++;
+            }
+        }
+
+        if (urgentTasks.isEmpty()) {
+            System.out.println("No tasks found.");
+            return;
+        }
+
+        // Sort by weightage (descending, highest first), then by days left (ascending, nearest first)
+        urgentTasks.sort((a, b) -> {
+            // Primary: Compare weightage (descending)
+            int weightComparison = Integer.compare(b.weightage, a.weightage);
+            if (weightComparison != 0) {
+                return weightComparison;
+            }
+            // Secondary: Compare deadline proximity (ascending)
+            return Long.compare(a.daysLeft, b.daysLeft);
+        });
+
+        // Verify sorting
+        for (int i = 0; i < urgentTasks.size() - 1; i++) {
+            int currentWeight = urgentTasks.get(i).weightage;
+            int nextWeight = urgentTasks.get(i + 1).weightage;
+            assert currentWeight >= nextWeight : "Weightage must be sorted in descending order";
+            if (currentWeight == nextWeight) {
+                assert urgentTasks.get(i).daysLeft <= urgentTasks.get(i + 1).daysLeft 
+                        : "Tasks with same weightage must be sorted by deadline (nearest first)";
+            }
+        }
+
+        // Display top X tasks
+        int displayCount = Math.min(topCount, urgentTasks.size());
+        System.out.println("Here are your top " + displayCount + " most urgent task(s):");
+        for (int i = 0; i < displayCount; i++) {
+            UrgentTaskEntry entry = urgentTasks.get(i);
+            System.out.println(entry.task.formatForList(entry.taskNumber));
+        }
+    }
+
+    /**
+     * Helper class to track task information for urgency sorting.
+     */
+    private static class UrgentTaskEntry {
+        final Task task;
+        final int taskNumber;
+        final int weightage;
+        final long daysLeft;
+
+        UrgentTaskEntry(Task task, int taskNumber, int weightage, long daysLeft) {
+            this.task = task;
+            this.taskNumber = taskNumber;
+            this.weightage = weightage;
+            this.daysLeft = daysLeft;
+        }
+    }
+
+    /**
      * Helper class to track deadline information for sorting and display.
      */
     private static class DeadlineEntry {

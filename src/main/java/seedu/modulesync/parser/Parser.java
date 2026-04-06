@@ -14,6 +14,7 @@ import seedu.modulesync.command.ExitCommand;
 import seedu.modulesync.command.ListCommand;
 import seedu.modulesync.command.ListDeadlinesCommand;
 import seedu.modulesync.command.ListNotDoneCommand;
+import seedu.modulesync.command.ListTopCommand;
 import seedu.modulesync.command.MarkCommand;
 import seedu.modulesync.command.SetDeadlineCommand;
 import seedu.modulesync.command.SetWeightCommand;
@@ -39,6 +40,7 @@ public class Parser {
     private static final String PREFIX_DEADLINES = "/deadlines";
     private static final String PREFIX_NOT_DONE = "/notdone";
     private static final String PREFIX_LIST_MOD = "/mod";
+    private static final String PREFIX_TOP = "/top";
     private static final String PREFIX_MOD = "mod ";
     private static final String PREFIX_TASK = "task ";
     private static final String PREFIX_DUE = "due ";
@@ -370,6 +372,18 @@ public class Parser {
             return new ListDeadlinesCommand();
         }
 
+        if (tokens.length == 2 && tokens[0].equalsIgnoreCase(PREFIX_TOP)) {
+            try {
+                int topCount = Integer.parseInt(tokens[1]);
+                if (topCount <= 0) {
+                    throw new ModuleSyncException("Top count must be a positive integer.");
+                }
+                return new ListTopCommand(topCount);
+            } catch (NumberFormatException e) {
+                throw new ModuleSyncException("Usage: list /top NUMBER (NUMBER must be a positive integer)");
+            }
+        }
+
         if (tokens.length == 2 && tokens[0].equalsIgnoreCase(PREFIX_LIST_MOD)) {
             if (tokens[1].startsWith("/")) {
                 throw new ModuleSyncException("Usage: list /mod MODULE_CODE");
@@ -413,7 +427,8 @@ public class Parser {
         }
 
         throw new ModuleSyncException(
-                "Unknown list filter. Try: list, list /mod MODULE_CODE, list /deadlines or list /notdone /mod MOD");
+                "Unknown list filter. Try: list, list /mod CODE, list /deadlines, "
+                + "list /top NUMBER or list /notdone /mod MOD");
     }
 
     private boolean containsToken(String[] tokens, String target) {
