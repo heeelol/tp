@@ -187,8 +187,7 @@ public class Ui {
                 if (task instanceof Deadline) {
                     daysLeft = ((Deadline) task).getDaysLeft();
                 }
-                urgentTasks.add(new UrgentTaskEntry(task, globalTaskNumber, module.getCode(), 
-                        weightage, daysLeft));
+                urgentTasks.add(new UrgentTaskEntry(task, globalTaskNumber, weightage, daysLeft));
                 globalTaskNumber++;
             }
         }
