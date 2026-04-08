@@ -4,21 +4,116 @@ import seedu.modulesync.exception.ModuleSyncException;
 import seedu.modulesync.task.Task;
 import seedu.modulesync.task.TaskList;
 
+//@@author Huang-Hau-Shuan
+/**
+ * Represents a single academic module (e.g. "CS2113") within a semester.
+ *
+ * <p>Each module owns a {@link TaskList} containing all tasks for that module.
+ * It also stores optional grade and credit-unit metadata so that teammates can
+ * implement grade-entry and GPA commands on top of this containee structure.
+ *
+ * <p><b>Grade / Credits lifecycle:</b>
+ * <ul>
+ *   <li>{@code grade} is {@code null} until the student enters it at end-of-semester.</li>
+ *   <li>{@code credits} defaults to {@code 0} until explicitly set.</li>
+ *   <li>Use {@link #hasGrade()} before calling {@link #getGrade()} to avoid null checks.</li>
+ * </ul>
+ */
 public class Module {
+
+    private static final int DEFAULT_CREDITS = 0;
+
     private final String code;
     private final TaskList taskList = new TaskList();
 
+    /** The letter grade awarded for this module (e.g. "A+", "B"). Null until entered. */
+    private String grade;
+
+    /** The number of Modular Credits (MCs) for this module. Defaults to 0 until set. */
+    private int credits;
+
+    /**
+     * Constructs a Module with no grade and zero credits.
+     *
+     * @param code the module code (case-insensitive; stored as upper-case)
+     */
     public Module(String code) {
         assert code != null && !code.trim().isEmpty() : "Module code must not be null or empty";
         this.code = code.toUpperCase();
+        this.grade = null;
+        this.credits = DEFAULT_CREDITS;
     }
 
+    /**
+     * Returns the module code (always upper-case).
+     *
+     * @return the module code
+     */
     public String getCode() {
         return code;
     }
 
+    /**
+     * Returns the task list for this module.
+     *
+     * @return the {@link TaskList} owned by this module
+     */
     public TaskList getTasks() {
         return taskList;
+    }
+
+    // -------------------------------------------------------------------------
+    // Grade / Credits — for teammate's grade command to call
+    // -------------------------------------------------------------------------
+
+    /**
+     * Returns the letter grade assigned to this module, or {@code null} if not yet entered.
+     *
+     * @return the grade string (e.g. "A+"), or null
+     */
+    public String getGrade() {
+        return grade;
+    }
+
+    /**
+     * Sets the letter grade for this module.
+     * Typically called by a teammate's {@code grade /mod <CODE> /grade <LETTER>} command.
+     *
+     * @param grade the letter grade to assign (e.g. "A+", "B"); must not be blank
+     */
+    public void setGrade(String grade) {
+        assert grade != null && !grade.trim().isEmpty() : "Grade must not be null or blank";
+        this.grade = grade.trim().toUpperCase();
+    }
+
+    /**
+     * Returns whether a grade has been assigned to this module.
+     *
+     * @return {@code true} if a grade is present, {@code false} otherwise
+     */
+    public boolean hasGrade() {
+        return grade != null;
+    }
+
+    /**
+     * Returns the number of Modular Credits (MCs) assigned to this module.
+     * Defaults to {@code 0} until explicitly set.
+     *
+     * @return the credit units
+     */
+    public int getCredits() {
+        return credits;
+    }
+
+    /**
+     * Sets the number of Modular Credits (MCs) for this module.
+     * Typically called by a teammate's {@code grade /mod <CODE> /credits <N>} command.
+     *
+     * @param credits the credit units; must be non-negative
+     */
+    public void setCredits(int credits) {
+        assert credits >= 0 : "Credits must be non-negative";
+        this.credits = credits;
     }
 
     public Task addTodo(String description) throws ModuleSyncException {
