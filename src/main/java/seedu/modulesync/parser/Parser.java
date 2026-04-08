@@ -7,6 +7,7 @@ import java.time.format.DateTimeParseException;
 
 import seedu.modulesync.command.AddDeadlineCommand;
 import seedu.modulesync.command.AddTodoCommand;
+import seedu.modulesync.command.CheckConflictsCommand;
 import seedu.modulesync.command.CheckUrgentCommand;
 import seedu.modulesync.command.Command;
 import seedu.modulesync.command.DeleteCommand;
@@ -32,6 +33,8 @@ import seedu.modulesync.storage.SemesterStorage;
 public class Parser {
 
     private static final String CMD_BYE = "bye";
+    private static final String CMD_CHECK_CONFLICTS = "check /conflicts";
+    private static final String CMD_ALT_CHECK_CONFLICTS = "/conflicts";
     private static final String CMD_CHECK_URGENT = "check /urgent";
     private static final String CMD_ALT_CHECK_URGENT = "/urgent";
     private static final String CMD_ADD = "add";
@@ -116,6 +119,9 @@ public class Parser {
         }
         if (trimmed.equalsIgnoreCase(CMD_BYE)) {
             return new ExitCommand();
+        }
+        if (trimmed.equalsIgnoreCase(CMD_CHECK_CONFLICTS) || trimmed.equalsIgnoreCase(CMD_ALT_CHECK_CONFLICTS)) {
+            return new CheckConflictsCommand();
         }
         if (trimmed.equalsIgnoreCase(CMD_CHECK_URGENT) || trimmed.equalsIgnoreCase(CMD_ALT_CHECK_URGENT)) {
             return new CheckUrgentCommand();

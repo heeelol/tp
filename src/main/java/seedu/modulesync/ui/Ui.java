@@ -1,10 +1,14 @@
 package seedu.modulesync.ui;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Scanner;
+import java.util.TreeMap;
 
 import seedu.modulesync.module.Module;
 import seedu.modulesync.module.ModuleBook;
@@ -57,6 +61,31 @@ public class Ui {
                 + " task(s) have passed their deadlines.");
         for (DeadlineEntry overdueDeadline : overdueDeadlines) {
             System.out.println(formatOverdueDeadline(overdueDeadline));
+        }
+    }
+
+    /**
+     * Displays same-day deadline conflicts to help the user spot crunch periods.
+     *
+     * @param moduleBook the active semester's module book
+     */
+    public void showDeadlineConflicts(ModuleBook moduleBook) {
+        assert moduleBook != null : "ModuleBook must not be null when showing deadline conflicts";
+
+        Map<LocalDate, List<DeadlineEntry>> conflictsByDate = collectDeadlineConflicts(moduleBook);
+        if (conflictsByDate.isEmpty()) {
+            System.out.println("No same-day deadline conflicts found.");
+            return;
+        }
+
+        System.out.println("Here are your same-day deadline conflicts:");
+        for (Map.Entry<LocalDate, List<DeadlineEntry>> conflictEntry : conflictsByDate.entrySet()) {
+            LocalDate date = conflictEntry.getKey();
+            List<DeadlineEntry> deadlines = conflictEntry.getValue();
+            System.out.println(date + " (" + deadlines.size() + " deadlines)");
+            for (DeadlineEntry deadlineEntry : deadlines) {
+                System.out.println("  " + formatConflictDeadline(deadlineEntry));
+            }
         }
     }
 
@@ -212,6 +241,39 @@ public class Ui {
     }
 
     /**
+     * Collects incomplete deadlines that share the same calendar day.
+     *
+     * @param moduleBook the module book to scan
+     * @return a map of conflict dates to their deadline entries
+     */
+    private Map<LocalDate, List<DeadlineEntry>> collectDeadlineConflicts(ModuleBook moduleBook) {
+        Map<LocalDate, List<DeadlineEntry>> deadlinesByDate = new TreeMap<>();
+        int globalTaskNumber = 1;
+
+        for (Module module : moduleBook.getModules()) {
+            for (Task task : module.getTasks().asUnmodifiableList()) {
+                if (task instanceof Deadline && !task.isDone()) {
+                    Deadline deadline = (Deadline) task;
+                    LocalDate dueDate = deadline.getBy().toLocalDate();
+                    deadlinesByDate.computeIfAbsent(dueDate, ignored -> new ArrayList<>())
+                            .add(new DeadlineEntry(deadline, globalTaskNumber, module.getCode()));
+                }
+                globalTaskNumber++;
+            }
+        }
+
+        Map<LocalDate, List<DeadlineEntry>> conflictsByDate = new LinkedHashMap<>();
+        for (Map.Entry<LocalDate, List<DeadlineEntry>> deadlineEntry : deadlinesByDate.entrySet()) {
+            List<DeadlineEntry> deadlines = deadlineEntry.getValue();
+            if (deadlines.size() > 1) {
+                deadlines.sort((first, second) -> first.deadline.getBy().compareTo(second.deadline.getBy()));
+                conflictsByDate.put(deadlineEntry.getKey(), deadlines);
+            }
+        }
+        return conflictsByDate;
+    }
+
+    /**
      * Formats a single overdue deadline line for the startup warning.
      *
      * @param deadlineEntry the deadline entry to format
@@ -224,6 +286,21 @@ public class Ui {
         return deadlineEntry.taskNumber + ".[" + deadlineEntry.deadline.getModuleCode() + "] "
                 + "[D][" + deadlineEntry.deadline.getStatusIcon() + "] "
                 + deadlineEntry.deadline.getDescription() + " (was due: " + dueDate + ")";
+    }
+
+    /**
+     * Formats a single deadline entry inside a same-day conflict group.
+     *
+     * @param deadlineEntry the conflict deadline entry to format
+     * @return the formatted conflict line
+     */
+    private String formatConflictDeadline(DeadlineEntry deadlineEntry) {
+        assert deadlineEntry != null : "Deadline entry must not be null";
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("HH:mm");
+        String dueTime = deadlineEntry.deadline.getBy().format(formatter);
+        return deadlineEntry.taskNumber + ".[" + deadlineEntry.deadline.getModuleCode() + "] "
+                + "[D][" + deadlineEntry.deadline.getStatusIcon() + "] "
+                + deadlineEntry.deadline.getDescription() + " (due: " + dueTime + ")";
     }
 
     /**
