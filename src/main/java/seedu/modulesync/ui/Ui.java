@@ -1,5 +1,7 @@
 package seedu.modulesync.ui;
 
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
@@ -36,6 +38,26 @@ public class Ui {
 
     public void showError(String message) {
         System.out.println("Error: " + message);
+    }
+
+    /**
+     * Displays overdue warnings for incomplete tasks whose deadlines have already passed.
+     *
+     * @param moduleBook the active semester's module book
+     */
+    public void showStartupOverdueWarning(ModuleBook moduleBook) {
+        assert moduleBook != null : "ModuleBook must not be null when showing startup overdue warnings";
+
+        List<DeadlineEntry> overdueDeadlines = collectOverdueDeadlines(moduleBook);
+        if (overdueDeadlines.isEmpty()) {
+            return;
+        }
+
+        System.out.println("Overdue warning: " + overdueDeadlines.size()
+                + " task(s) have passed their deadlines.");
+        for (DeadlineEntry overdueDeadline : overdueDeadlines) {
+            System.out.println(formatOverdueDeadline(overdueDeadline));
+        }
     }
 
     public void showTaskAdded(Module module, Task task, int totalTasks) {
@@ -162,6 +184,46 @@ public class Ui {
         for (DeadlineEntry entry : deadlines) {
             System.out.println(entry.deadline.formatForList(entry.taskNumber));
         }
+    }
+
+    /**
+     * Collects overdue deadlines from the active semester.
+     *
+     * @param moduleBook the module book to scan
+     * @return the overdue deadline entries sorted by due date
+     */
+    private List<DeadlineEntry> collectOverdueDeadlines(ModuleBook moduleBook) {
+        List<DeadlineEntry> overdueDeadlines = new ArrayList<>();
+        LocalDateTime now = LocalDateTime.now();
+        int globalTaskNumber = 1;
+
+        for (Module module : moduleBook.getModules()) {
+            for (Task task : module.getTasks().asUnmodifiableList()) {
+                if (task instanceof Deadline) {
+                    Deadline deadline = (Deadline) task;
+                    if (!task.isDone() && deadline.getBy().isBefore(now)) {
+                        overdueDeadlines.add(new DeadlineEntry(deadline, globalTaskNumber, module.getCode()));
+                    }
+                }
+                globalTaskNumber++;
+            }
+        }
+        return overdueDeadlines;
+    }
+
+    /**
+     * Formats a single overdue deadline line for the startup warning.
+     *
+     * @param deadlineEntry the deadline entry to format
+     * @return the formatted overdue warning line
+     */
+    private String formatOverdueDeadline(DeadlineEntry deadlineEntry) {
+        assert deadlineEntry != null : "Deadline entry must not be null";
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("MMM dd yyyy, HH:mm");
+        String dueDate = deadlineEntry.deadline.getBy().format(formatter);
+        return deadlineEntry.taskNumber + ".[" + deadlineEntry.deadline.getModuleCode() + "] "
+                + "[D][" + deadlineEntry.deadline.getStatusIcon() + "] "
+                + deadlineEntry.deadline.getDescription() + " (was due: " + dueDate + ")";
     }
 
     /**

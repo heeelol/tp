@@ -39,11 +39,25 @@ public class ModuleSync {
      * @throws ModuleSyncException if the storage layer cannot be initialised
      */
     public ModuleSync() throws ModuleSyncException {
-        assert false : "dummy assertion set to fail";
         this.semesterStorage = SemesterStorage.ofDefault();
         this.semesterBook = semesterStorage.load();
         this.parser = new Parser(semesterBook, semesterStorage);
         this.ui = new Ui(new Scanner(System.in));
+    }
+
+    /**
+     * Constructs a ModuleSync instance with injected dependencies.
+     *
+     * @param semesterBook the semester book used by the application
+     * @param semesterStorage the semester storage used by the application
+     * @param parser the parser used to create commands
+     * @param ui the UI used for input and output
+     */
+    ModuleSync(SemesterBook semesterBook, SemesterStorage semesterStorage, Parser parser, Ui ui) {
+        this.semesterBook = semesterBook;
+        this.semesterStorage = semesterStorage;
+        this.parser = parser;
+        this.ui = ui;
     }
 
     /**
@@ -62,6 +76,11 @@ public class ModuleSync {
     public void run() {
         ui.showWelcome();
         ui.showCurrentSemester(semesterBook);
+        try {
+            showStartupWarnings();
+        } catch (ModuleSyncException e) {
+            ui.showError(e.getMessage());
+        }
         boolean exit = false;
         while (!exit) {
             String fullCommand = ui.readCommand();
@@ -83,6 +102,18 @@ public class ModuleSync {
                 ui.showError(e.getMessage());
             }
         }
+    }
+
+    /**
+     * Displays warnings that should appear immediately when the CLI opens.
+     */
+    void showStartupWarnings() throws ModuleSyncException {
+        if (semesterBook.getCurrentSemesterName() == null) {
+            LOGGER.fine("Skipping startup warnings because no active semester is set.");
+            return;
+        }
+        ModuleBook activeModuleBook = semesterBook.getCurrentModuleBook();
+        ui.showStartupOverdueWarning(activeModuleBook);
     }
 
     /**
