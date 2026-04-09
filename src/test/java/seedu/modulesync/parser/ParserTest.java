@@ -85,7 +85,7 @@ class ParserTest {
         semesterBook.setCurrentSemester("AY2526-S2");
         SemesterStorage storage = new SemesterStorage(tempDir.resolve("semesters.txt"));
         Parser semesterParser = new Parser(semesterBook, storage);
-        assertTrue(semesterParser.parse("semester stats AY2526-S2") instanceof SemesterStatsCommand);
+        assertTrue(semesterParser.parse("semester stats") instanceof SemesterStatsCommand);
     }
 
     @Test

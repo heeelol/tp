@@ -765,11 +765,10 @@ public class Parser {
             return new UnarchiveSemesterCommand(semesterBook, semesterStorage);
         }
         if (subcommand.equals("stats")) {
-            if (parts.length < 2 || parts[1].trim().isEmpty()) {
-                throw new ModuleSyncException("Usage: semester stats SEMESTER_NAME");
+            if (parts.length > 1 && !parts[1].trim().isEmpty()) {
+                throw new ModuleSyncException("Usage: semester stats");
             }
-            String semesterName = parts[1].trim();
-            return new SemesterStatsCommand(semesterBook, semesterName);
+            return new SemesterStatsCommand();
         }
         if (remainder.toLowerCase().startsWith(CMD_SWITCH)) {
             return parseSemesterSwitch(remainder);
