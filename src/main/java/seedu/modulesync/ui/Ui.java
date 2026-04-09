@@ -691,7 +691,7 @@ public class Ui {
     public void showSemesterList(SemesterBook semesterBook) {
         assert semesterBook != null : "SemesterBook must not be null";
         if (!semesterBook.hasSemesters()) {
-            System.out.println("No semesters registered.");
+            System.out.println("No semesters are currently tracked.");
             return;
         }
         String currentName = semesterBook.getCurrentSemesterName();
@@ -699,7 +699,7 @@ public class Ui {
         int index = 1;
         for (Semester semester : semesterBook.getAllSemesters()) {
             String marker = semester.getName().equals(currentName) ? " <- current" : "";
-            String status = semester.isArchived() ? "[archived]" : "[active]";
+            String status = semester.isArchived() ? "[Archived]" : "[Active]";
             System.out.println(index + ". " + semester.getName() + " " + status + marker);
             index++;
         }

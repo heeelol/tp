@@ -16,6 +16,7 @@ import seedu.modulesync.command.ListCommand;
 import seedu.modulesync.command.ListDeadlinesCommand;
 import seedu.modulesync.command.ListModulesCommand;
 import seedu.modulesync.command.ListNotDoneCommand;
+import seedu.modulesync.command.ListSemesterCommand;
 import seedu.modulesync.command.ListTopCommand;
 import seedu.modulesync.command.MarkCommand;
 import seedu.modulesync.command.SemesterStatsCommand;
@@ -47,6 +48,7 @@ public class Parser {
     private static final String CMD_STATS = "stats";
     private static final String CMD_MODULES = "modules";
     private static final String CMD_SEMESTER_STATS = "semesterstats";
+    private static final String CMD_SEMESTER = "semester";
 
     private static final String PREFIX_DEADLINES = "/deadlines";
     private static final String PREFIX_NOT_DONE = "/notdone";
@@ -131,6 +133,9 @@ public class Parser {
         }
         if (trimmed.equalsIgnoreCase(CMD_SEMESTER_STATS)) {
             return new SemesterStatsCommand();
+        }
+        if (trimmed.toLowerCase().startsWith(CMD_SEMESTER)) {
+            return parseSemester(trimmed);
         }
         if (trimmed.toLowerCase().startsWith(CMD_ADD)) {
             return parseAdd(trimmed);
@@ -549,6 +554,26 @@ public class Parser {
         assert moduleCode != null && !moduleCode.isBlank() : "Module code must not be blank for stats command";
         return new StatsCommand(moduleCode);
     }
-}
 
+    /**
+     * Parses a "semester" command, looking for sub-commands like "list".
+     *
+     * @param input the full semester command string
+     * @return a corresponding {@link seedu.modulesync.command.SemesterCommand}
+     * @throws ModuleSyncException if the command is unknown or arguments are invalid
+     */
+    private Command parseSemester(String input) throws ModuleSyncException {
+        if (semesterBook == null || semesterStorage == null) {
+            throw new ModuleSyncException("Semester commands are not available in this context.");
+        }
+        
+        String remainder = extractRemainder(input, CMD_SEMESTER.length());
+        
+        if (remainder.equalsIgnoreCase(CMD_LIST)) {
+            return new ListSemesterCommand(semesterBook, semesterStorage);
+        }
+        
+        throw new ModuleSyncException("Unknown semester command. Try: semester list");
+    }
+}
 
