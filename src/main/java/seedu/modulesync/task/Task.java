@@ -3,6 +3,10 @@ package seedu.modulesync.task;
 import java.time.LocalDateTime;
 
 public abstract class Task {
+    private static final int DEFAULT_PRIORITY_SCORE = 0;
+    private static final String PRIORITY_PREFIX = " [Priority: ";
+    private static final String PRIORITY_SUFFIX = "]";
+
     private final String moduleCode;
     private final String description;
     private boolean isDone;
@@ -137,5 +141,29 @@ public abstract class Task {
             return base + " [" + weightage + "%]";
         }
         return base;
+    }
+
+    /**
+     * Calculates the priority score for this task.
+     *
+     * @return the calculated priority score
+     */
+    public int calculatePriorityScore() {
+        if (!hasWeightage()) {
+            return DEFAULT_PRIORITY_SCORE;
+        }
+        return getWeightage();
+    }
+
+    /**
+     * Formats this task for list output together with its priority score.
+     *
+     * @param index the global display index of the task
+     * @return the formatted task line with its priority score
+     */
+    public String formatForListWithPriority(int index) {
+        String formattedTask = formatForList(index);
+        int priorityScore = calculatePriorityScore();
+        return formattedTask + PRIORITY_PREFIX + priorityScore + PRIORITY_SUFFIX;
     }
 }
