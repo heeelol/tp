@@ -16,6 +16,7 @@ import seedu.modulesync.command.DeleteCommand;
 import seedu.modulesync.command.ExitCommand;
 import seedu.modulesync.command.ListCommand;
 import seedu.modulesync.command.ListDeadlinesCommand;
+import seedu.modulesync.command.ListGradesCommand;
 import seedu.modulesync.command.ListModulesCommand;
 import seedu.modulesync.command.ListNotDoneCommand;
 import seedu.modulesync.command.ListSemesterCommand;
@@ -50,6 +51,7 @@ public class Parser {
     private static final String CMD_SETDEADLINE = "setdeadline";
     private static final String CMD_STATS = "stats";
     private static final String CMD_MODULES = "modules";
+    private static final String CMD_GRADES = "grades";
     private static final String CMD_MODULE = "module";
     private static final String CMD_SEMESTER_STATS = "semesterstats";
     private static final String CMD_SEMESTER = "semester";
@@ -148,6 +150,9 @@ public class Parser {
             }
             return new CapCommand(semesterBook, semesterStorage);
         }
+        if (trimmed.toLowerCase().startsWith(CMD_GRADES)) {
+            return parseGrades(trimmed);
+        }
         if (trimmed.toLowerCase().startsWith(CMD_SEMESTER)) {
             return parseSemester(trimmed);
         }
@@ -179,6 +184,26 @@ public class Parser {
             return parseStats(trimmed);
         }
         throw new ModuleSyncException(UNKNOWN_COMMAND_MSG);
+    }
+
+    /**
+     * Parses a "grades" command and returns the supported grades sub-command.
+     *
+     * @param input the full grades command string
+     * @return the supported grades sub-command
+     * @throws ModuleSyncException if the grades command is unavailable or malformed
+     */
+    private Command parseGrades(String input) throws ModuleSyncException {
+        if (semesterBook == null || semesterStorage == null) {
+            throw new ModuleSyncException("Grades commands are not available in this context.");
+        }
+
+        String remainder = extractRemainder(input, CMD_GRADES.length());
+        if (remainder.equalsIgnoreCase(CMD_LIST)) {
+            return new ListGradesCommand(semesterBook, semesterStorage);
+        }
+
+        throw new ModuleSyncException("Unknown grades command. Try: grades list");
     }
 
     /**
