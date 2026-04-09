@@ -399,7 +399,3 @@ for that command.
 | Archive a module | `module archive /mod MODULE_CODE` |
 | Restore an archived module | `module unarchive /mod MODULE_CODE` |
 | Exit application | `bye` |
-| Switch to another semester | `semester switch SEMESTER_NAME` |
-| Archive a module | `module archive /mod MODULE_CODE` |
-| Restore an archived module | `module unarchive /mod MODULE_CODE` |
-| Exit application | `bye` |
