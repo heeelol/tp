@@ -56,22 +56,22 @@ Examples:
 * `list /mod CS2113`
 * `list /deadlines`
 
-### Listing registered modules: `modules`
+### Listing registered modules: `module list`
 Shows a list of all modules you are currently tracking.
 
-Format: `modules`
+Format: `module list`
 
 * A module is considered “registered” once you have at least one task under it.
 * The output includes the number of tasks currently tracked for each module.
 
 Example:
 
-* `modules`
+* `module list`
 
-### Viewing semester statistics: `semesterstats`
-Shows an overall summary across all tracked modules (treated as the current semester).
+### Viewing semester statistics: `semester stats`
+Shows an overall summary for a specified semester.
 
-Format: `semesterstats`
+Format: `semester stats SEMESTER_NAME`
 
 The summary includes:
 * number of modules tracked
@@ -82,7 +82,22 @@ The summary includes:
 
 Example:
 
-* `semesterstats`
+* `semester stats AY2526-S2`
+
+### Archiving the current semester: `semester archive`
+Archives your **current** semester and makes it read-only.
+
+Format: `semester archive`
+
+* After archiving, mutating commands (e.g., `add`, `delete`, `mark`, `unmark`, `setweight`) are blocked for that semester.
+* To transition to a new term, archive first, then create/switch:
+	* `semester archive`
+	* `semester new AY2627-S1`
+
+### Unarchiving the current semester: `semester unarchive`
+Unarchives your **current** semester and makes it editable again.
+
+Format: `semester unarchive`
 
 ### Listing not-done tasks for a module: `list /notdone`
 Shows only tasks that are not marked done for a specific module.
@@ -162,7 +177,7 @@ Example:
 
 **Q**: How do I transfer my data to another computer? 
 
-**A**: Your task data is stored in a file called `modules.txt` in the `data/` folder. You can copy this file to the `data/` folder of ModuleSync on another computer to transfer all your tasks.
+**A**: Your data is stored in the `data/` folder. Copy the entire `data/` folder (including `current.txt` and all `*.txt` semester files) to the other computer.
 
 **Q**: Can I edit the `modules.txt` file directly?
 
@@ -197,8 +212,10 @@ Where:
 | List tasks by module | `list /mod MODULE_CODE` |
 | List upcoming deadlines | `list /deadlines` |
 | List not-done tasks by module | `list /notdone /mod MODULE_CODE` |
-| List registered modules | `modules` |
-| View semester statistics | `semesterstats` |
+| List registered modules | `module list` |
+| View semester statistics | `semester stats SEMESTER_NAME` |
+| Archive current semester | `semester archive` |
+| Unarchive current semester | `semester unarchive` |
 | Mark task as done | `mark TASK_NUMBER` |
 | Unmark task as not done | `unmark TASK_NUMBER` |
 | Delete task | `delete TASK_NUMBER` |

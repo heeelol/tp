@@ -301,7 +301,7 @@ The following class diagram shows the main classes involved in deletion and how 
 
 
 //@@author Notchennie1
-### [Feature] List Registered Modules (`modules`)
+### [Feature] List Registered Modules (`module list`)
 
 #### Implementation
 
@@ -310,7 +310,7 @@ In ModuleSync, modules are represented implicitly: a module exists once at least
 
 This feature is implemented using the following operations:
 
-* `Parser#parse(String)` — Recognises the `modules` keyword and creates a `ListModulesCommand`.
+* `Parser#parse(String)` — Recognises `module list` and creates a `ListModulesCommand`.
 * `ListModulesCommand#execute(ModuleBook, Storage, Ui)` — Delegates display logic to the UI.
 * `Ui#showModuleList(ModuleBook)` — Iterates the `ModuleBook` and prints each module code with its task count.
 
@@ -318,9 +318,9 @@ This command is view-only and does not modify any stored data.
 
 #### Sequence Diagram
 
-The following sequence diagram illustrates the interactions when the user executes `modules`:
+The following sequence diagram illustrates the interactions when the user executes `module list`:
 
-<img src="images/ListModulesSequenceDiagram.png" alt="Sequence diagram for the modules command" />
+<img src="images/ListModulesSequenceDiagram.png" alt="Sequence diagram for the module list command" />
 
 > **Note:** The diagram above must be generated from
 > [`docs/diagrams/ListModulesSequenceDiagram.puml`](diagrams/ListModulesSequenceDiagram.puml)
@@ -330,7 +330,7 @@ The following sequence diagram illustrates the interactions when the user execut
 
 The following class diagram shows the main classes involved in listing modules and how they collaborate:
 
-<img src="images/ListModulesClassDiagram.png" alt="Class diagram for the modules command" />
+<img src="images/ListModulesClassDiagram.png" alt="Class diagram for the module list command" />
 
 > **Note:** The diagram above must be generated from
 > [`docs/diagrams/ListModulesClassDiagram.puml`](diagrams/ListModulesClassDiagram.puml)
@@ -350,7 +350,7 @@ The following class diagram shows the main classes involved in listing modules a
 
 
 //@@author Notchennie1
-### [Feature] Semester Statistics (`semesterstats`)
+### [Feature] Semester Statistics (`semester stats SEMESTER_NAME`)
 
 #### Implementation
 
@@ -362,7 +362,7 @@ Statistics are computed on-demand from in-memory data.
 
 This feature is implemented using the following operations:
 
-* `Parser#parse(String)` — Recognises the `semesterstats` keyword and creates a `SemesterStatsCommand`.
+* `Parser#parse(String)` — Recognises `semester stats SEMESTER_NAME` and creates a `SemesterStatsCommand`.
 * `SemesterStatsCommand#execute(ModuleBook, Storage, Ui)` — Delegates the computation and display to the UI.
 * `Ui#showSemesterStatistics(ModuleBook)` — Aggregates per-task and per-module counts:
   total tasks, done tasks, task type counts (todo vs deadline), and optional weightage-based completion.
@@ -371,9 +371,9 @@ This command is view-only and does not modify any stored data.
 
 #### Sequence Diagram
 
-The following sequence diagram illustrates the interactions when the user executes `semesterstats`:
+The following sequence diagram illustrates the interactions when the user executes `semester stats SEMESTER_NAME`:
 
-<img src="images/SemesterStatsSequenceDiagram.png" alt="Sequence diagram for the semesterstats command" />
+<img src="images/SemesterStatsSequenceDiagram.png" alt="Sequence diagram for the semester stats command" />
 
 > **Note:** The diagram above must be generated from
 > [`docs/diagrams/SemesterStatsSequenceDiagram.puml`](diagrams/SemesterStatsSequenceDiagram.puml)
@@ -383,7 +383,7 @@ The following sequence diagram illustrates the interactions when the user execut
 
 The following class diagram shows the main classes involved in computing semester statistics:
 
-<img src="images/SemesterStatsClassDiagram.png" alt="Class diagram for the semesterstats command" />
+<img src="images/SemesterStatsClassDiagram.png" alt="Class diagram for the semester stats command" />
 
 > **Note:** The diagram above must be generated from
 > [`docs/diagrams/SemesterStatsClassDiagram.puml`](diagrams/SemesterStatsClassDiagram.puml)
@@ -424,6 +424,7 @@ The following class diagram shows the main classes involved in computing semeste
 |--------|----------|---------------|------------------|
 |v1.0|new user|see usage instructions|refer to them when I forget how to use the application|
 |v2.0|user|find a to-do item by name|locate a to-do without having to go through the entire list|
+|v2.1|student|archive my current semester|transition to a new term while finalizing my academic records|
 
 ## Non-Functional Requirements
 

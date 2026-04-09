@@ -115,6 +115,37 @@ class SemesterReadOnlyViewFeatureTest {
         assertFalse(actual.contains("Added task under CS2113:"));
     }
 
+    @Test
+    void run_archiveCurrentSemester_blocksMutation(@TempDir Path tempDir) throws Exception {
+        SemesterBook semesterBook = new SemesterBook();
+        Semester activeSemester = new Semester("AY2526-S2", false);
+        activeSemester.getModuleBook().getOrCreate("CS2113").addTodo("Before archive");
+        semesterBook.addSemester(activeSemester);
+        semesterBook.setCurrentSemester("AY2526-S2");
+
+        SemesterStorage semesterStorage = new SemesterStorage(tempDir);
+        Parser parser = new Parser(semesterBook, semesterStorage);
+        String commands = "semester archive\nadd /mod CS2113 /task After archive\nbye\n";
+        Ui ui = new Ui(new Scanner(new ByteArrayInputStream(commands.getBytes(StandardCharsets.UTF_8))));
+        ModuleSync moduleSync = createModuleSync(semesterBook, semesterStorage, parser, ui);
+
+        ByteArrayOutputStream output = new ByteArrayOutputStream();
+        PrintStream originalOut = System.out;
+        System.setOut(new PrintStream(output));
+
+        try {
+            moduleSync.run();
+        } finally {
+            System.setOut(originalOut);
+        }
+
+        String actual = output.toString(StandardCharsets.UTF_8).replace("\r\n", "\n");
+
+        assertTrue(actual.contains("Semester 'AY2526-S2' has been archived."));
+        assertTrue(actual.contains("Error: Semester 'AY2526-S2' is archived and read-only."));
+        assertFalse(actual.contains("Added task under CS2113:"));
+    }
+
     /**
      * Creates a semester book with one archived semester and one active semester.
      *

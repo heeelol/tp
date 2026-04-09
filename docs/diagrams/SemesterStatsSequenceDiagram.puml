@@ -15,7 +15,7 @@ Participant "Module" as module
 Participant "TaskList" as taskList
 Participant "Task" as task
 
-user -> app : enter "semesterstats"
+user -> app : enter "semester stats AY2526-S2"
 activate app
 
 app -> ui : readCommand()
@@ -27,11 +27,11 @@ app -> parser : parse(rawInput)
 activate parser
 
 note right of parser
-  Recognises: semesterstats
+  Recognises: semester stats SEMESTER_NAME
 end note
 
 create cmd
-parser -> cmd : new SemesterStatsCommand()
+parser -> cmd : new SemesterStatsCommand(semesterBook, semesterName)
 parser --> app : cmd
 deactivate parser
 
