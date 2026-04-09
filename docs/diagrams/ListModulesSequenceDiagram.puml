@@ -14,7 +14,7 @@ Participant "ModuleBook" as moduleBook
 Participant "Module" as module
 Participant "TaskList" as taskList
 
-user -> app : enter "modules"
+user -> app : enter "module list"
 activate app
 
 app -> ui : readCommand()
@@ -26,7 +26,7 @@ app -> parser : parse(rawInput)
 activate parser
 
 note right of parser
-  Recognises: modules
+  Recognises: module list
 end note
 
 create cmd

@@ -15,6 +15,8 @@ import org.junit.jupiter.api.io.TempDir;
 
 import seedu.modulesync.exception.ModuleSyncException;
 import seedu.modulesync.module.ModuleBook;
+import seedu.modulesync.semester.Semester;
+import seedu.modulesync.semester.SemesterBook;
 import seedu.modulesync.storage.Storage;
 import seedu.modulesync.task.Task;
 import seedu.modulesync.ui.Ui;
@@ -47,12 +49,16 @@ class SemesterStatsCommandTest {
         TestStorage storage = new TestStorage(tempDir.resolve("modules.txt"));
         Ui ui = new Ui(new java.util.Scanner(new ByteArrayInputStream(new byte[0])));
 
+        SemesterBook semesterBook = new SemesterBook();
+        semesterBook.addSemester(new Semester("AY2526-S2", moduleBook, false));
+        semesterBook.setCurrentSemester("AY2526-S2");
+
         ByteArrayOutputStream output = new ByteArrayOutputStream();
         PrintStream originalOut = System.out;
         System.setOut(new PrintStream(output));
 
         try {
-            new SemesterStatsCommand().execute(moduleBook, storage, ui);
+            new SemesterStatsCommand(semesterBook, "AY2526-S2").execute(moduleBook, storage, ui);
         } finally {
             System.setOut(originalOut);
         }

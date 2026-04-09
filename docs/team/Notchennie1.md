@@ -8,7 +8,7 @@ Given below are my contributions to the project.
 
 ## New Features
 
-### Feature 4: Delete Task (`delete TASK_NUMBER`)
+### Feature 1: Delete Task (`delete TASK_NUMBER`)
 **What it does:** Allows users to delete a task by its global display index, helping them remove obsolete or incorrectly entered items.
 
 **Justification:** Task lists evolve frequently; deletion is necessary to keep the tracker accurate and uncluttered.
@@ -17,7 +17,7 @@ Given below are my contributions to the project.
 - Deletion updates the in-memory state safely and persists the updated state to storage.
 - Includes unit testing coverage for valid deletion and invalid index handling.
 
-### Feature 3: List Not-Done Tasks by Module (`list /notdone /mod MODULE_CODE`)
+### Feature 2: List Not-Done Tasks by Module (`list /notdone /mod MODULE_CODE`)
 **What it does:** Supports listing only the tasks that are not marked done for a specific module, separated from the main list view.
 
 **Justification:** When a module accumulates many completed tasks, users may want to focus only on remaining work without being distracted by completed items.
@@ -27,8 +27,8 @@ Given below are my contributions to the project.
 - Kept indexing consistent with the application’s existing listing conventions.
 - Reused the existing command/UI flow by delegating display to the UI.
 
-### Feature 1: List Registered Modules (`modules`)
-**What it does:** Adds a `modules` command that shows all modules currently being tracked, together with the number of tasks under each module.
+### Feature 3: List Registered Modules (`module list`)
+**What it does:** Adds a `module list` command that shows all modules currently being tracked, together with the number of tasks under each module.
 
 **Justification:** As the number of tracked modules grows, users need a quick way to confirm which modules they are currently managing without scanning the entire task list.
 
@@ -37,8 +37,8 @@ Given below are my contributions to the project.
 - Designed output to be concise while still informative (module code + task count).
 - Added parser coverage to ensure the new keyword is recognised reliably.
 
-### Feature 2: Semester Statistics (`semesterstats`)
-**What it does:** Adds a `semesterstats` command that aggregates a semester-wide summary across all tracked modules (treated as the current semester). The output includes overall completion statistics, a breakdown by task type, optional weightage completion (if weightage exists), and a per-module distribution summary.
+### Feature 4: Semester Statistics (`semester stats SEMESTER_NAME`)
+**What it does:** Adds a `semester stats SEMESTER_NAME` command that aggregates a semester-wide summary for a specified semester. The output includes overall completion statistics, a breakdown by task type, optional weightage completion (if weightage exists), and a per-module distribution summary.
 
 **Justification:** Students often want a high-level overview of workload and progress across all modules, not just within a single module. A single summary command helps them evaluate how balanced their workload is and how much work is left.
 
@@ -46,6 +46,17 @@ Given below are my contributions to the project.
 - Implemented statistics computation as an on-demand aggregation over in-memory tasks, keeping the feature view-only.
 - Ensured weighted tasks remain meaningful across restarts by updating the storage encoding/decoding to persist optional task weightage while maintaining backward compatibility.
 - Added tests to validate the printed summary format and to ensure the command does not trigger a save.
+
+### Feature 5: Archive Current Semester (`semester archive`)
+**What it does:** Adds a `semester archive` command that archives the current semester (making it read-only) so users can transition to a new term while preserving past records.
+
+**Justification:** Students often need to start a new semester without losing or accidentally modifying old data. Archiving creates a clean boundary between terms while keeping past work accessible.
+
+**Highlights:**
+- Implemented as a semester-lifecycle command that persists the archive state to disk (archived semester files are marked with a `#archived` header).
+- Reused existing read-only enforcement in the main command loop to “bug-proof” archived semesters by centrally blocking all mutating commands.
+- Added `semester unarchive` to restore editability when needed.
+- Added tests to verify persistence and that mutation is rejected after archiving.
 
 ## Code Contributed
 [RepoSense link](https://nus-cs2113-ay2526-s2.github.io/tp-dashboard/?search=Notchennie1&breakdown=true)
@@ -58,17 +69,18 @@ Given below are my contributions to the project.
 ## Documentation
 
 ### User Guide
-- Added documentation for `modules` and `semesterstats`.
+- Added documentation for `module list`, `semester stats`, and `semester archive`/`semester unarchive`.
 - Updated the command summary table to include the new commands.
 - Documented the `modules.txt` storage format (including optional weightage fields) to support safe manual edits.
 
 ### Developer Guide
-- Added implementation write-ups for `modules` and `semesterstats` under my author section.
+- Added implementation write-ups for `module list` and `semester stats` under my author section.
 - Added UML class and sequence diagram sources (PlantUML) for both features.
 
 ## Testing
 
-- Added JUnit tests to cover parsing and execution output for the new `modules` and `semesterstats` commands.
+- Added JUnit tests to cover parsing and execution output for `module list` and `semester stats`.
+- Added tests for semester archiving/unarchiving persistence and read-only mutation blocking.
 - Ensured tests verify these commands are view-only (no storage save calls).
 - Maintained/extended deletion testing to verify task counts and index behavior after deletion.
 

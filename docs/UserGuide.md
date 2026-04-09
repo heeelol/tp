@@ -88,11 +88,10 @@ Examples:
 * `list /deadlines`
 * `list /top 5`
 
-### Listing registered modules: `modules`
+### Listing registered modules: `module list`
+Shows a list of all modules you are currently tracking.
 
-Shows all modules currently tracked in the active semester.
-
-Format: `modules`
+Format: `module list`
 
 The output includes:
 
@@ -103,13 +102,12 @@ The output includes:
 
 Example:
 
-* `modules`
+* `module list`
 
-### Viewing semester statistics: `semesterstats`
+### Viewing semester statistics: `semester stats`
+Shows an overall summary for a specified semester.
 
-Shows an overall summary across all tracked modules in the active semester.
-
-Format: `semesterstats`
+Format: `semester stats SEMESTER_NAME`
 
 The summary includes:
 
@@ -121,7 +119,22 @@ The summary includes:
 
 Example:
 
-* `semesterstats`
+* `semester stats AY2526-S2`
+
+### Archiving the current semester: `semester archive`
+Archives your **current** semester and makes it read-only.
+
+Format: `semester archive`
+
+* After archiving, mutating commands (e.g., `add`, `delete`, `mark`, `unmark`, `setweight`) are blocked for that semester.
+* To transition to a new term, archive first, then create/switch:
+	* `semester archive`
+	* `semester new AY2627-S1`
+
+### Unarchiving the current semester: `semester unarchive`
+Unarchives your **current** semester and makes it editable again.
+
+Format: `semester unarchive`
 
 ### Listing not-done tasks for a module: `list /notdone`
 
@@ -404,8 +417,10 @@ for that command.
 | List upcoming deadlines | `list /deadlines` |
 | List top urgent tasks | `list /top NUMBER` |
 | List not-done tasks by module | `list /notdone /mod MODULE_CODE` |
-| List registered modules | `modules` |
-| View semester statistics | `semesterstats` |
+| List registered modules | `module list` |
+| View semester statistics | `semester stats SEMESTER_NAME` |
+| Archive current semester | `semester archive` |
+| Unarchive current semester | `semester unarchive` |
 | Mark task as done | `mark TASK_NUMBER` |
 | Mark all tasks in a module as done | `mark /mod MODULE_CODE /all` |
 | Unmark task as not done | `unmark TASK_NUMBER` |

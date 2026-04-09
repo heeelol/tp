@@ -8,6 +8,7 @@ import java.time.format.DateTimeParseException;
 import seedu.modulesync.command.AddDeadlineCommand;
 import seedu.modulesync.command.AddTodoCommand;
 import seedu.modulesync.command.ArchiveModuleCommand;
+import seedu.modulesync.command.ArchiveSemesterCommand;
 import seedu.modulesync.command.CapCommand;
 import seedu.modulesync.command.CheckConflictsCommand;
 import seedu.modulesync.command.CheckUrgentCommand;
@@ -32,6 +33,7 @@ import seedu.modulesync.command.SetWeightCommand;
 import seedu.modulesync.command.StatsCommand;
 import seedu.modulesync.command.SwitchSemesterCommand;
 import seedu.modulesync.command.UnarchiveModuleCommand;
+import seedu.modulesync.command.UnarchiveSemesterCommand;
 import seedu.modulesync.command.UnmarkCommand;
 import seedu.modulesync.exception.ModuleSyncException;
 import seedu.modulesync.semester.SemesterBook;
@@ -57,11 +59,9 @@ public class Parser {
     private static final String CMD_SETDEADLINE = "setdeadline";
     private static final String CMD_EDITDEADLINE = "editdeadline";
     private static final String CMD_STATS = "stats";
-    private static final String CMD_MODULES = "modules";
     private static final String CMD_GRADES = "grades";
     private static final String CMD_GRADE = "grade";
     private static final String CMD_MODULE = "module";
-    private static final String CMD_SEMESTER_STATS = "semesterstats";
     private static final String CMD_SEMESTER = "semester";
     private static final String CMD_SWITCH = "switch";
     private static final String CMD_CAP = "cap";
@@ -156,12 +156,6 @@ public class Parser {
         }
         if (trimmed.equalsIgnoreCase(CMD_CHECK_URGENT) || trimmed.equalsIgnoreCase(CMD_ALT_CHECK_URGENT)) {
             return new CheckUrgentCommand();
-        }
-        if (trimmed.equalsIgnoreCase(CMD_MODULES)) {
-            return new ListModulesCommand();
-        }
-        if (trimmed.equalsIgnoreCase(CMD_SEMESTER_STATS)) {
-            return new SemesterStatsCommand();
         }
         if (trimmed.equalsIgnoreCase(CMD_CAP)) {
             if (semesterBook == null || semesterStorage == null) {
@@ -709,15 +703,22 @@ public class Parser {
             throw new ModuleSyncException("Usage: stats /mod MODULE_CODE");
         }
         String[] tokens = remainder.split("\\s+");
-        if (tokens.length != 2 || !tokens[0].equalsIgnoreCase(PREFIX_LIST_MOD)) {
+        if (tokens.length != 2) {
             throw new ModuleSyncException("Usage: stats /mod MODULE_CODE");
         }
-        String moduleCode = tokens[1];
-        if (moduleCode.startsWith("/")) {
+
+        String scope = tokens[0];
+        String value = tokens[1];
+        if (value.startsWith("/")) {
             throw new ModuleSyncException("Usage: stats /mod MODULE_CODE");
         }
-        assert moduleCode != null && !moduleCode.isBlank() : "Module code must not be blank for stats command";
-        return new StatsCommand(moduleCode);
+
+        if (scope.equalsIgnoreCase(PREFIX_LIST_MOD)) {
+            assert !value.isBlank() : "Module code must not be blank for stats command";
+            return new StatsCommand(value);
+        }
+
+        throw new ModuleSyncException("Usage: stats /mod MODULE_CODE");
     }
 
     /**
@@ -751,6 +752,25 @@ public class Parser {
             String semesterName = parts[1].trim();
             return new NewSemesterCommand(semesterBook, semesterStorage, semesterName);
         }
+        if (subcommand.equals("archive")) {
+            if (parts.length > 1 && !parts[1].trim().isEmpty()) {
+                throw new ModuleSyncException("Usage: semester archive");
+            }
+            return new ArchiveSemesterCommand(semesterBook, semesterStorage);
+        }
+        if (subcommand.equals("unarchive")) {
+            if (parts.length > 1 && !parts[1].trim().isEmpty()) {
+                throw new ModuleSyncException("Usage: semester unarchive");
+            }
+            return new UnarchiveSemesterCommand(semesterBook, semesterStorage);
+        }
+        if (subcommand.equals("stats")) {
+            if (parts.length < 2 || parts[1].trim().isEmpty()) {
+                throw new ModuleSyncException("Usage: semester stats SEMESTER_NAME");
+            }
+            String semesterName = parts[1].trim();
+            return new SemesterStatsCommand(semesterBook, semesterName);
+        }
         if (remainder.toLowerCase().startsWith(CMD_SWITCH)) {
             return parseSemesterSwitch(remainder);
         }
@@ -776,6 +796,7 @@ public class Parser {
     /**
      * Parses a "module" command and returns the appropriate module-level command.
      * Supports:
+     * - {@code module list}
      * - {@code module archive /mod MODULECODE}
      * - {@code module unarchive /mod MODULECODE}
      *
@@ -787,20 +808,28 @@ public class Parser {
         String remainder = extractRemainder(input, CMD_MODULE_LENGTH);
 
         if (remainder.isEmpty()) {
-            throw new ModuleSyncException("Usage: module archive /mod MODULECODE or module unarchive /mod MODULECODE");
+            throw new ModuleSyncException(
+                    "Usage: module list | module archive /mod MODULECODE | "
+                            + "module unarchive /mod MODULECODE");
         }
 
         String[] parts = remainder.split("\\s+", 2);
         String subcommand = parts[0].toLowerCase();
         String args = parts.length > 1 ? parts[1] : "";
 
+        if (subcommand.equals(CMD_LIST)) {
+            if (!args.isBlank()) {
+                throw new ModuleSyncException("Usage: module list");
+            }
+            return new ListModulesCommand();
+        }
         if (subcommand.equals(PREFIX_ARCHIVE)) {
             return parseModuleArchive(args);
         } else if (subcommand.equals(PREFIX_UNARCHIVE)) {
             return parseModuleUnarchive(args);
         }
 
-        throw new ModuleSyncException("Unknown module command. Try: module archive /mod MODULECODE");
+        throw new ModuleSyncException("Unknown module command. Try: module list or module archive /mod MODULECODE");
     }
 
     /**

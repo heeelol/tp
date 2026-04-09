@@ -9,6 +9,7 @@ import org.junit.jupiter.api.io.TempDir;
 
 import seedu.modulesync.command.AddTodoCommand;
 import seedu.modulesync.command.ArchiveModuleCommand;
+import seedu.modulesync.command.ArchiveSemesterCommand;
 import seedu.modulesync.command.GradeCommand;
 import seedu.modulesync.command.ListModulesCommand;
 import seedu.modulesync.command.ListNotDoneCommand;
@@ -16,8 +17,10 @@ import seedu.modulesync.command.MarkCommand;
 import seedu.modulesync.command.NewSemesterCommand;
 import seedu.modulesync.command.SemesterStatsCommand;
 import seedu.modulesync.command.UnarchiveModuleCommand;
+import seedu.modulesync.command.UnarchiveSemesterCommand;
 import seedu.modulesync.command.UnmarkCommand;
 import seedu.modulesync.exception.ModuleSyncException;
+import seedu.modulesync.semester.Semester;
 import seedu.modulesync.semester.SemesterBook;
 import seedu.modulesync.storage.SemesterStorage;
 
@@ -73,10 +76,16 @@ class ParserTest {
     }
 
     @Test
-    void parse_modulesAndSemesterStats_returnsCorrectCommands() throws ModuleSyncException {
+    void parse_moduleListAndSemesterStats_returnsCorrectCommands(@TempDir Path tempDir) throws ModuleSyncException {
         Parser parser = new Parser();
-        assertTrue(parser.parse("modules") instanceof ListModulesCommand);
-        assertTrue(parser.parse("semesterstats") instanceof SemesterStatsCommand);
+        assertTrue(parser.parse("module list") instanceof ListModulesCommand);
+
+        SemesterBook semesterBook = new SemesterBook();
+        semesterBook.addSemester(new Semester("AY2526-S2", false));
+        semesterBook.setCurrentSemester("AY2526-S2");
+        SemesterStorage storage = new SemesterStorage(tempDir.resolve("semesters.txt"));
+        Parser semesterParser = new Parser(semesterBook, storage);
+        assertTrue(semesterParser.parse("semester stats AY2526-S2") instanceof SemesterStatsCommand);
     }
 
     @Test
@@ -109,6 +118,19 @@ class ParserTest {
         
         assertTrue(parser.parse("semester new AY2526-S2") instanceof NewSemesterCommand);
         assertTrue(parser.parse("semester new AY2627-S1") instanceof NewSemesterCommand);
+    }
+
+    @Test
+    void parse_semesterArchiveAndUnarchive_returnsCorrectCommands(@TempDir Path tempDir) throws ModuleSyncException {
+        SemesterBook semesterBook = new SemesterBook();
+        semesterBook.addSemester(new Semester("AY2526-S2", false));
+        semesterBook.setCurrentSemester("AY2526-S2");
+
+        SemesterStorage storage = new SemesterStorage(tempDir);
+        Parser parser = new Parser(semesterBook, storage);
+
+        assertTrue(parser.parse("semester archive") instanceof ArchiveSemesterCommand);
+        assertTrue(parser.parse("semester unarchive") instanceof UnarchiveSemesterCommand);
     }
 
     @Test
