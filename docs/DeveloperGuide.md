@@ -692,8 +692,8 @@ semester stats
 ```
 
 Expected:
-- `stats /mod CS2113` shows total tasks, on-time/late/active counts and percentages, and average days-before-deadline (N/A until deadline tasks are marked done with a completion timestamp).
-- `semester stats` shows module count, overall task counts and completion percentage, type breakdown, and weightage completion.
+- `stats /mod CS2113` shows total tasks, on-time/late/active counts and percentages, and average days before deadline. Average completion time shows `N/A` until at least one deadline task has been marked done.
+- `semester stats` shows module count, overall task counts and completion percentage, type breakdown (todo vs deadline), and weightage-based completion summary if any tasks have weightage set.
 
 ---
 
@@ -746,18 +746,20 @@ Expected:
 
 ### 11. Read-only guard (archived semester)
 
-```
-semester switch AY2526-S2
-```
-Then archive AY2526-S2 from within it:
+While in `AY2526-S2`, archive it and immediately attempt a mutation:
+
 ```
 semester archive
-semester new AY2527-S1
-semester switch AY2526-S2
 add /mod CS2113 /task Should Fail
 ```
 
 Expected: the `add` command is rejected with a message indicating the semester is archived and read-only.
+
+To restore the semester for further testing:
+
+```
+semester unarchive
+```
 
 ---
 
