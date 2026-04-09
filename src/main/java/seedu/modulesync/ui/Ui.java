@@ -105,7 +105,7 @@ public class Ui {
         int taskNumber = 1;
         for (Module module : moduleBook.getModules()) {
             for (Task task : module.getTasks().asUnmodifiableList()) {
-                System.out.println(task.formatForList(taskNumber));
+                showTaskWithPriority(task, taskNumber);
                 taskNumber++;
             }
         }
@@ -130,7 +130,7 @@ public class Ui {
         for (Module currentModule : moduleBook.getModules()) {
             for (Task task : currentModule.getTasks().asUnmodifiableList()) {
                 if (currentModule.getCode().equals(module.getCode())) {
-                    System.out.println(task.formatForList(globalTaskNumber));
+                    showTaskWithPriority(task, globalTaskNumber);
                 }
                 globalTaskNumber++;
             }
@@ -158,7 +158,7 @@ public class Ui {
                         System.out.println("Here are the not done tasks for " + targetModuleCode + ":");
                         foundNotDoneTask = true;
                     }
-                    System.out.println(task.formatForList(globalTaskNumber));
+                    showTaskWithPriority(task, globalTaskNumber);
                 }
                 globalTaskNumber++;
             }
@@ -211,7 +211,7 @@ public class Ui {
 
         System.out.println("Here are the upcoming deadlines:");
         for (DeadlineEntry entry : deadlines) {
-            System.out.println(entry.deadline.formatForList(entry.taskNumber));
+            showTaskWithPriority(entry.deadline, entry.taskNumber);
         }
     }
 
@@ -304,7 +304,7 @@ public class Ui {
     }
 
     /**
-     * Displays the top X most urgent tasks, sorted by weightage (descending) and then by deadline (ascending).
+     * Displays the top X most urgent tasks, sorted by priority score and then by deadline proximity.
      * 
      * @param moduleBook the collection of modules and tasks
      * @param topCount   the number of top urgent tasks to display
@@ -323,12 +323,9 @@ public class Ui {
             assert module != null : "Module retrieved from ModuleBook must not be null";
             for (Task task : module.getTasks().asUnmodifiableList()) {
                 assert task != null : "Task retrieved from TaskList must not be null";
-                int weightage = task.hasWeightage() ? task.getWeightage() : 0;
-                long daysLeft = Long.MAX_VALUE;
-                if (task instanceof Deadline) {
-                    daysLeft = ((Deadline) task).getDaysLeft();
-                }
-                urgentTasks.add(new UrgentTaskEntry(task, globalTaskNumber, weightage, daysLeft));
+                int priorityScore = task.calculatePriorityScore();
+                LocalDateTime dueDate = extractDueDate(task);
+                urgentTasks.add(new UrgentTaskEntry(task, globalTaskNumber, priorityScore, dueDate));
                 globalTaskNumber++;
             }
         }
@@ -338,25 +335,28 @@ public class Ui {
             return;
         }
 
-        // Sort by weightage (descending, highest first), then by days left (ascending, nearest first)
+        // Sort by priority score (descending, highest first), then by due date (ascending, nearest first)
         urgentTasks.sort((a, b) -> {
-            // Primary: Compare weightage (descending)
-            int weightComparison = Integer.compare(b.weightage, a.weightage);
-            if (weightComparison != 0) {
-                return weightComparison;
+            int priorityComparison = Integer.compare(b.priorityScore, a.priorityScore);
+            if (priorityComparison != 0) {
+                return priorityComparison;
             }
-            // Secondary: Compare deadline proximity (ascending)
-            return Long.compare(a.daysLeft, b.daysLeft);
+            int dueDateComparison = compareDueDates(a.dueDate, b.dueDate);
+            if (dueDateComparison != 0) {
+                return dueDateComparison;
+            }
+            return Integer.compare(a.taskNumber, b.taskNumber);
         });
 
         // Verify sorting
         for (int i = 0; i < urgentTasks.size() - 1; i++) {
-            int currentWeight = urgentTasks.get(i).weightage;
-            int nextWeight = urgentTasks.get(i + 1).weightage;
-            assert currentWeight >= nextWeight : "Weightage must be sorted in descending order";
-            if (currentWeight == nextWeight) {
-                assert urgentTasks.get(i).daysLeft <= urgentTasks.get(i + 1).daysLeft 
-                        : "Tasks with same weightage must be sorted by deadline (nearest first)";
+            UrgentTaskEntry currentEntry = urgentTasks.get(i);
+            UrgentTaskEntry nextEntry = urgentTasks.get(i + 1);
+            assert currentEntry.priorityScore >= nextEntry.priorityScore
+                    : "Priority score must be sorted in descending order";
+            if (currentEntry.priorityScore == nextEntry.priorityScore) {
+                assert compareDueDates(currentEntry.dueDate, nextEntry.dueDate) <= 0
+                        : "Tasks with the same priority score must be sorted by due date";
             }
         }
 
@@ -365,8 +365,55 @@ public class Ui {
         System.out.println("Here are your top " + displayCount + " most urgent task(s):");
         for (int i = 0; i < displayCount; i++) {
             UrgentTaskEntry entry = urgentTasks.get(i);
-            System.out.println(entry.task.formatForList(entry.taskNumber));
+            showTaskWithPriority(entry.task, entry.taskNumber);
         }
+    }
+
+    /**
+     * Extracts a task's due date for urgency tie-breaking.
+     *
+     * @param task the task to inspect
+     * @return the due date if the task is a deadline, or {@code null} otherwise
+     */
+    private LocalDateTime extractDueDate(Task task) {
+        assert task != null : "Task must not be null when extracting due date";
+        if (task instanceof Deadline) {
+            Deadline deadline = (Deadline) task;
+            return deadline.getBy();
+        }
+        return null;
+    }
+
+    /**
+     * Compares two due dates for urgency tie-breaking.
+     *
+     * @param firstDueDate the first due date
+     * @param secondDueDate the second due date
+     * @return a negative value if the first due date is earlier, a positive value if later, or zero if tied
+     */
+    private int compareDueDates(LocalDateTime firstDueDate, LocalDateTime secondDueDate) {
+        if (firstDueDate == null && secondDueDate == null) {
+            return 0;
+        }
+        if (firstDueDate == null) {
+            return 1;
+        }
+        if (secondDueDate == null) {
+            return -1;
+        }
+        return firstDueDate.compareTo(secondDueDate);
+    }
+
+    /**
+     * Prints a task line together with its calculated priority score.
+     *
+     * @param task the task to print
+     * @param taskNumber the global display index of the task
+     */
+    private void showTaskWithPriority(Task task, int taskNumber) {
+        assert task != null : "Task must not be null when showing a list entry";
+        assert taskNumber > 0 : "Task number must be positive when showing a list entry";
+        System.out.println(task.formatForListWithPriority(taskNumber));
     }
 
     /**
@@ -375,14 +422,14 @@ public class Ui {
     private static class UrgentTaskEntry {
         final Task task;
         final int taskNumber;
-        final int weightage;
-        final long daysLeft;
+        final int priorityScore;
+        final LocalDateTime dueDate;
 
-        UrgentTaskEntry(Task task, int taskNumber, int weightage, long daysLeft) {
+        UrgentTaskEntry(Task task, int taskNumber, int priorityScore, LocalDateTime dueDate) {
             this.task = task;
             this.taskNumber = taskNumber;
-            this.weightage = weightage;
-            this.daysLeft = daysLeft;
+            this.priorityScore = priorityScore;
+            this.dueDate = dueDate;
         }
     }
 

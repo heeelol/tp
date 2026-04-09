@@ -5,7 +5,7 @@ import seedu.modulesync.storage.Storage;
 import seedu.modulesync.ui.Ui;
 
 /**
- * Lists the top X most urgent tasks based on weightage (primary) and deadline (secondary).
+ * Lists the top X most urgent tasks based on calculated priority score.
  */
 public class ListTopCommand extends Command {
     private final int topCount;
