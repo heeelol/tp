@@ -105,9 +105,9 @@ Example:
 * `module list`
 
 ### Viewing semester statistics: `semester stats`
-Shows an overall summary for a specified semester.
+Shows an overall summary for your **current** semester.
 
-Format: `semester stats SEMESTER_NAME`
+Format: `semester stats`
 
 The summary includes:
 
@@ -119,7 +119,7 @@ The summary includes:
 
 Example:
 
-* `semester stats AY2526-S2`
+* `semester stats`
 
 ### Archiving the current semester: `semester archive`
 Archives your **current** semester and makes it read-only.
@@ -452,7 +452,7 @@ for that command.
 | List top urgent tasks | `list /top NUMBER` |
 | List not-done tasks by module | `list /notdone /mod MODULE_CODE` |
 | List registered modules | `module list` |
-| View semester statistics | `semester stats SEMESTER_NAME` |
+| View semester statistics | `semester stats` |
 | Archive current semester | `semester archive` |
 | Unarchive current semester | `semester unarchive` |
 | Mark task as done | `mark TASK_NUMBER` |
