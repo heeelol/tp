@@ -7,6 +7,7 @@ import java.time.format.DateTimeParseException;
 
 import seedu.modulesync.command.AddDeadlineCommand;
 import seedu.modulesync.command.AddTodoCommand;
+import seedu.modulesync.command.CapCommand;
 import seedu.modulesync.command.CheckConflictsCommand;
 import seedu.modulesync.command.CheckUrgentCommand;
 import seedu.modulesync.command.Command;
@@ -49,6 +50,7 @@ public class Parser {
     private static final String CMD_MODULES = "modules";
     private static final String CMD_SEMESTER_STATS = "semesterstats";
     private static final String CMD_SEMESTER = "semester";
+    private static final String CMD_CAP = "cap";
 
     private static final String PREFIX_DEADLINES = "/deadlines";
     private static final String PREFIX_NOT_DONE = "/notdone";
@@ -133,6 +135,12 @@ public class Parser {
         }
         if (trimmed.equalsIgnoreCase(CMD_SEMESTER_STATS)) {
             return new SemesterStatsCommand();
+        }
+        if (trimmed.equalsIgnoreCase(CMD_CAP)) {
+            if (semesterBook == null || semesterStorage == null) {
+                throw new ModuleSyncException("CAP commands are not available in this context.");
+            }
+            return new CapCommand(semesterBook, semesterStorage);
         }
         if (trimmed.toLowerCase().startsWith(CMD_SEMESTER)) {
             return parseSemester(trimmed);

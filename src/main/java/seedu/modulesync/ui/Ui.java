@@ -704,4 +704,29 @@ public class Ui {
             index++;
         }
     }
+
+    /**
+     * Displays the calculated Semester and Cumulative CAP.
+     *
+     * @param semPoints  total grade points for the current semester
+     * @param semCredits total graded credits for the current semester
+     * @param cumPoints  total grade points overall
+     * @param cumCredits total graded credits overall
+     */
+    public void showCap(double semPoints, int semCredits, double cumPoints, int cumCredits) {
+        if (cumCredits == 0) {
+            System.out.println("No graded modules found. A CAP cannot be calculated yet.");
+            return;
+        }
+
+        System.out.println("Here is your CAP summary:");
+        
+        if (semCredits > 0) {
+            System.out.printf("Current Semester CAP: %.2f%n", semPoints / semCredits);
+        } else {
+            System.out.println("Current Semester CAP: N/A (no graded modules this semester)");
+        }
+
+        System.out.printf("Cumulative CAP: %.2f%n", cumPoints / cumCredits);
+    }
 }
