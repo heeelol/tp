@@ -1,18 +1,24 @@
 package seedu.modulesync.parser;
 
+import java.nio.file.Path;
+
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 
 import seedu.modulesync.command.AddTodoCommand;
 import seedu.modulesync.command.ArchiveModuleCommand;
 import seedu.modulesync.command.ListModulesCommand;
 import seedu.modulesync.command.ListNotDoneCommand;
 import seedu.modulesync.command.MarkCommand;
+import seedu.modulesync.command.NewSemesterCommand;
 import seedu.modulesync.command.SemesterStatsCommand;
 import seedu.modulesync.command.UnarchiveModuleCommand;
 import seedu.modulesync.command.UnmarkCommand;
 import seedu.modulesync.exception.ModuleSyncException;
+import seedu.modulesync.semester.SemesterBook;
+import seedu.modulesync.storage.SemesterStorage;
 
 class ParserTest {
 
@@ -92,5 +98,25 @@ class ParserTest {
         assertThrows(ModuleSyncException.class, () -> parser.parse("module archive"));
         assertThrows(ModuleSyncException.class, () -> parser.parse("module archive /mod"));
         assertThrows(ModuleSyncException.class, () -> parser.parse("module unarchive"));
+    }
+
+    @Test
+    void parse_semesterNew_returnsNewSemesterCommand(@TempDir Path tempDir) throws ModuleSyncException {
+        SemesterBook semesterBook = new SemesterBook();
+        SemesterStorage storage = new SemesterStorage(tempDir.resolve("semesters.txt"));
+        Parser parser = new Parser(semesterBook, storage);
+        
+        assertTrue(parser.parse("semester new AY2526-S2") instanceof NewSemesterCommand);
+        assertTrue(parser.parse("semester new AY2627-S1") instanceof NewSemesterCommand);
+    }
+
+    @Test
+    void parse_semesterNewInvalidFormat_throws(@TempDir Path tempDir) {
+        SemesterBook semesterBook = new SemesterBook();
+        SemesterStorage storage = new SemesterStorage(tempDir.resolve("semesters.txt"));
+        Parser parser = new Parser(semesterBook, storage);
+        
+        assertThrows(ModuleSyncException.class, () -> parser.parse("semester new"));
+        assertThrows(ModuleSyncException.class, () -> parser.parse("semester new "));
     }
 }

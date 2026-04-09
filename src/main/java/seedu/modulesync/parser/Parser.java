@@ -22,6 +22,7 @@ import seedu.modulesync.command.ListNotDoneCommand;
 import seedu.modulesync.command.ListSemesterCommand;
 import seedu.modulesync.command.ListTopCommand;
 import seedu.modulesync.command.MarkCommand;
+import seedu.modulesync.command.NewSemesterCommand;
 import seedu.modulesync.command.SemesterStatsCommand;
 import seedu.modulesync.command.SetDeadlineCommand;
 import seedu.modulesync.command.SetWeightCommand;
@@ -613,8 +614,21 @@ public class Parser {
         
         String remainder = extractRemainder(input, CMD_SEMESTER.length());
         
-        if (remainder.equalsIgnoreCase(CMD_LIST)) {
+        if (remainder.isEmpty()) {
+            throw new ModuleSyncException("Usage: semester new SEMESTER_NAME or semester list");
+        }
+
+        String[] parts = remainder.split("\\s+", 2);
+        String subcommand = parts[0].toLowerCase();
+
+        if (subcommand.equals(CMD_LIST)) {
             return new ListSemesterCommand(semesterBook, semesterStorage);
+        } else if (subcommand.equals("new")) {
+            if (parts.length < 2 || parts[1].trim().isEmpty()) {
+                throw new ModuleSyncException("Usage: semester new SEMESTER_NAME");
+            }
+            String semesterName = parts[1].trim();
+            return new NewSemesterCommand(semesterBook, semesterStorage, semesterName);
         }
         if (remainder.toLowerCase().startsWith(CMD_SWITCH)) {
             return parseSemesterSwitch(remainder);
