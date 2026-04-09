@@ -138,9 +138,9 @@ Examples:
 * `list /notdone /mod CS2113`
 * `list /mod CS2113 /notdone`
 
-### Marking a task as done: `mark`
+### Marking a task or module as done: `mark`
 
-Marks a task as completed, or marks every task in a module as completed.
+Marks a specific task as completed, or marks all tasks within the specified module as done.
 
 Formats:
 
@@ -151,7 +151,7 @@ Examples:
 
 * `mark 1`
 * `mark 5`
-* `mark /mod CS2113 /all`
+* `mark /mod CS2113 /all` (Marks all tasks under CS2113 as complete)
 
 ### Unmarking a task as not done: `unmark`
 
@@ -174,11 +174,14 @@ Example:
 
 * `delete 3`
 
-### Assigning weightage to an existing task: `setweight`
+### Assigning or editing weightage: `setweight` / `editweight`
 
-Assigns or updates the percentage weightage of an existing task.
+Assigns or updates the percentage grading weight of an existing task.
 
-Format: `setweight TASK_NUMBER PERCENT`
+Formats:
+
+* `setweight TASK_NUMBER PERCENT`
+* `editweight TASK_NUMBER /w PERCENT`
 
 * `TASK_NUMBER` is the global display index shown by `list`.
 * `PERCENT` must be an integer from `0` to `100`.
@@ -187,12 +190,16 @@ Examples:
 
 * `setweight 3 25`
 * `setweight 7 0`
+* `editweight 3 /w 25`
 
-### Updating or adding a deadline: `setdeadline`
+### Updating or adding a deadline: `setdeadline` / `editdeadline`
 
-Adds a deadline to an existing task, or updates the deadline of an existing deadline task.
+Adds a deadline to an existing task, or updates the due date of an existing task. Both commands perform the same action without needing to recreate the task.
 
-Format: `setdeadline TASK_NUMBER /by YYYY-MM-DD[-HHmm]`
+Formats:
+
+* `setdeadline TASK_NUMBER /by YYYY-MM-DD[-HHmm]`
+* `editdeadline TASK_NUMBER /by YYYY-MM-DD[-HHmm]`
 
 * `TASK_NUMBER` is the global display index shown by `list`.
 * `YYYY-MM-DD` is interpreted as `23:59` on that date.
@@ -200,10 +207,7 @@ Format: `setdeadline TASK_NUMBER /by YYYY-MM-DD[-HHmm]`
 Examples:
 
 * `setdeadline 2 /by 2026-04-20`
-* `setdeadline 5 /by 2026-04-20-1800`
-
-If you are editing a task that is already a deadline, `editdeadline TASK_NUMBER /by YYYY-MM-DD[-HHmm]` is also
-accepted.
+* `editdeadline 5 /by 2026-04-20-1800`
 
 ### Checking same-day deadline conflicts: `check /conflicts`
 
@@ -226,12 +230,19 @@ Here are your same-day deadline conflicts:
 
 ### Checking urgent deadlines: `check /urgent`
 
-Shows unfinished deadline tasks due within the next 48 hours.
+Filters for incomplete tasks due within the next 48 hours and sorts them by urgency (closest first).
 
 Formats:
 
 * `check /urgent`
 * `/urgent`
+
+Example output:
+
+```text
+Urgent tasks (due within 48 hours):
+  1.[CS2113] [D][ ] Final Project (due: 12 hours)
+```
 
 ### Recording a module grade: `grade`
 
@@ -246,9 +257,16 @@ Examples:
 
 ### Viewing CAP summary: `cap`
 
-Shows CAP for the current semester and cumulative CAP across all semesters with CAP-bearing grades.
+Calculates the current semester CAP and cumulative CAP on a standard 5.0 scale (ignoring CS/CU or ungraded modules).
 
 Format: `cap`
+
+Example output:
+
+```text
+Semester CAP: 5.00
+Cumulative CAP: 4.80
+```
 
 ### Viewing grade history: `grades list`
 
@@ -269,9 +287,16 @@ Cumulative CAP at archive: 5.00 (4 MCs)
 
 ### Listing tracked semesters: `semester list`
 
-Shows all semesters currently tracked by ModuleSync.
+Prints a numbered list of all tracked semesters and indicates if they are Active or Archived.
 
 Format: `semester list`
+
+Example output:
+
+```text
+1. AY2525-S1 (Archived)
+2. AY2525-S2 (Active)
+```
 
 ### Creating a new semester: `semester new`
 
@@ -386,6 +411,7 @@ for that command.
 | Unmark task as not done | `unmark TASK_NUMBER` |
 | Delete task | `delete TASK_NUMBER` |
 | Set task weightage | `setweight TASK_NUMBER PERCENT` |
+| Edit task weightage | `editweight TASK_NUMBER /w PERCENT` |
 | Set or update task deadline | `setdeadline TASK_NUMBER /by YYYY-MM-DD[-HHmm]` |
 | Edit an existing deadline | `editdeadline TASK_NUMBER /by YYYY-MM-DD[-HHmm]` |
 | Check same-day deadline conflicts | `check /conflicts` or `/conflicts` |
