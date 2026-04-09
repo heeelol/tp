@@ -1,0 +1,86 @@
+@startuml CommandArchitectureClassDiagram
+
+hide circle
+skinparam classAttributeIconSize 0
+
+class ModuleSync {
+    +run(): void
+}
+
+class Parser {
+    +parse(input:String): Command
+}
+
+abstract class Command {
+    +{abstract} execute(mb:ModuleBook, s:Storage, ui:Ui): void
+    +isMutating(): boolean
+    +isExit(): boolean
+}
+
+abstract class SemesterCommand {
+    #semesterBook: SemesterBook
+    #semesterStorage: SemesterStorage
+    +isMutating(): boolean
+}
+
+note right of SemesterCommand
+  Semester-lifecycle commands extend
+  SemesterCommand instead of Command directly.
+  They bypass the read-only guard.
+end note
+
+class AddTodoCommand
+class AddDeadlineCommand
+class SetWeightCommand
+class StatsCommand
+class DeleteCommand
+class MarkCommand
+class UnmarkCommand
+class ListCommand
+class CheckConflictsCommand
+class CheckUrgentCommand
+class ExitCommand
+
+class NewSemesterCommand
+class SwitchSemesterCommand
+class ArchiveModuleCommand
+class UnarchiveModuleCommand
+class ListSemesterCommand
+
+class ModuleBook
+class Storage
+class Ui
+class SemesterBook
+class SemesterStorage
+
+ModuleSync --> Parser : uses >
+ModuleSync ..> Command : dispatches >
+
+Parser ..> Command : creates >
+
+Command <|-- AddTodoCommand
+Command <|-- AddDeadlineCommand
+Command <|-- SetWeightCommand
+Command <|-- StatsCommand
+Command <|-- DeleteCommand
+Command <|-- MarkCommand
+Command <|-- UnmarkCommand
+Command <|-- ListCommand
+Command <|-- CheckConflictsCommand
+Command <|-- CheckUrgentCommand
+Command <|-- ExitCommand
+
+Command <|-- SemesterCommand
+SemesterCommand <|-- NewSemesterCommand
+SemesterCommand <|-- SwitchSemesterCommand
+SemesterCommand <|-- ArchiveModuleCommand
+SemesterCommand <|-- UnarchiveModuleCommand
+SemesterCommand <|-- ListSemesterCommand
+
+Command ..> ModuleBook
+Command ..> Storage
+Command ..> Ui
+SemesterCommand ..> SemesterBook
+SemesterCommand ..> SemesterStorage
+
+@enduml

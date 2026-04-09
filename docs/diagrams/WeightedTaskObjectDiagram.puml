@@ -1,0 +1,50 @@
+@startuml WeightedTaskObjectDiagram
+
+skinparam objectAttributeIconSize 0
+
+object "sb:SemesterBook" as sb {
+    currentSemesterName = "AY2526-S2"
+}
+
+object "s:Semester" as sem {
+    name = "AY2526-S2"
+    archived = false
+}
+
+object "mb:ModuleBook" as mb {
+}
+
+object "cs2113:Module" as mod {
+    code = "CS2113"
+    grade = null
+    credits = 4
+    archived = false
+}
+
+object "tl:TaskList" as tl {
+}
+
+object "tp:Todo" as todo {
+    moduleCode = "CS2113"
+    description = "Final Project"
+    isDone = false
+    weightage = 25
+    completedAt = null
+}
+
+sb *--> sem : contains >
+sem *--> mb : owns >
+mb *--> mod : tracks >
+mod *--> tl : owns >
+tl *--> todo : stores >
+
+note right of todo
+  Snapshot immediately after:
+  add /mod CS2113 /task Final Project /w 25
+
+  weightage = 25  → task counts for 25% of grade
+  isDone = false  → not yet submitted
+  completedAt = null → no completion timestamp yet
+end note
+
+@enduml

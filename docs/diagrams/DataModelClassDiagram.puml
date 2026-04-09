@@ -1,0 +1,92 @@
+@startuml DataModelClassDiagram
+
+hide circle
+skinparam classAttributeIconSize 0
+
+class SemesterBook {
+    -currentSemesterName: String
+    +getCurrentSemester(): Semester
+    +getCurrentModuleBook(): ModuleBook
+    +switchOrCreate(name:String): boolean
+    +isCurrentSemesterReadOnly(): boolean
+    +archiveCurrentSemester(): void
+    +getAllSemesters(): Collection<Semester>
+}
+
+class Semester {
+    -name: String
+    -archived: boolean
+    +getName(): String
+    +getModuleBook(): ModuleBook
+    +isArchived(): boolean
+    +setArchived(archived:boolean): void
+}
+
+class ModuleBook {
+    +getOrCreate(code:String): Module
+    +getModule(code:String): Module
+    +getModules(): Collection<Module>
+    +getTaskByDisplayIndex(index:int): Task
+    +removeTaskByDisplayIndex(index:int): Task
+    +countTotalTasks(): int
+}
+
+class Module {
+    -code: String
+    -grade: String
+    -credits: int
+    -archived: boolean
+    +getCode(): String
+    +getTasks(): TaskList
+    +hasGrade(): boolean
+    +getGrade(): String
+    +setGrade(grade:String): void
+    +getCredits(): int
+    +setCredits(credits:int): void
+}
+
+class TaskList {
+    +addTodo(moduleCode:String, description:String, weightage:Integer): Task
+    +addDeadline(moduleCode:String, description:String, by:LocalDateTime, weightage:Integer): Task
+    +asUnmodifiableList(): List<Task>
+    +removeTask(index:int): Task
+    +size(): int
+}
+
+abstract class Task {
+    -moduleCode: String
+    -description: String
+    -isDone: boolean
+    -weightage: Integer
+    -completedAt: LocalDateTime
+    +isDone(): boolean
+    +markDone(): void
+    +markUndone(): void
+    +hasWeightage(): boolean
+    +getWeightage(): Integer
+    +setWeightage(weightage:int): void
+    +calculatePriorityScore(): int
+    +encode(): String
+    #{abstract} getTypeCode(): char
+}
+
+class Todo {
+    #getTypeCode(): char
+}
+
+class Deadline {
+    -by: LocalDateTime
+    +getBy(): LocalDateTime
+    #getTypeCode(): char
+    +calculatePriorityScore(): int
+}
+
+SemesterBook "1" *--> "0..*" Semester : contains >
+Semester "1" *--> "1" ModuleBook : owns >
+ModuleBook "1" *--> "0..*" Module : tracks >
+Module "1" *--> "1" TaskList : owns >
+TaskList "1" *--> "0..*" Task : stores >
+Task <|-- Todo
+Task <|-- Deadline
+
+@enduml
