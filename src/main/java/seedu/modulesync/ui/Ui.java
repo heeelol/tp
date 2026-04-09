@@ -44,6 +44,10 @@ public class Ui {
         System.out.println("Error: " + message);
     }
 
+    public void showMessage(String message) {
+        System.out.println(message);
+    }
+
     /**
      * Displays overdue warnings for incomplete tasks whose deadlines have already passed.
      *
@@ -104,6 +108,10 @@ public class Ui {
         System.out.println("Here are the tasks:");
         int taskNumber = 1;
         for (Module module : moduleBook.getModules()) {
+            // Skip archived modules in the main task list to keep workspace clean
+            if (module.isArchived()) {
+                continue;
+            }
             for (Task task : module.getTasks().asUnmodifiableList()) {
                 showTaskWithPriority(task, taskNumber);
                 taskNumber++;
@@ -183,6 +191,10 @@ public class Ui {
         int globalTaskNumber = 1;
         
         for (Module module : moduleBook.getModules()) {
+            // Skip archived modules to keep workspace clean
+            if (module.isArchived()) {
+                continue;
+            }
             assert module != null : "Module retrieved from ModuleBook must not be null";
             for (Task task : module.getTasks().asUnmodifiableList()) {
                 assert task != null : "Task retrieved from TaskList must not be null";
@@ -550,7 +562,10 @@ public class Ui {
         System.out.println("Here are your registered modules:");
         int index = 1;
         for (Module module : moduleBook.getModules()) {
-            System.out.println(index + ". " + module.getCode() + " (" + module.getTasks().size() + " task(s))");
+            String status = module.isArchived() ? " [archived]" : "";
+            String moduleInfo = index + ". " + module.getCode() + " (" 
+                    + module.getTasks().size() + " task(s))" + status;
+            System.out.println(moduleInfo);
             index++;
         }
     }

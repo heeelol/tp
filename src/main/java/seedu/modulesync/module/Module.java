@@ -32,6 +32,9 @@ public class Module {
     /** The number of Modular Credits (MCs) for this module. Defaults to 0 until set. */
     private int credits;
 
+    /** Whether this module has been archived. Archived modules are read-only. */
+    private boolean archived;
+
     /**
      * Constructs a Module with no grade and zero credits.
      *
@@ -42,6 +45,7 @@ public class Module {
         this.code = code.toUpperCase();
         this.grade = null;
         this.credits = DEFAULT_CREDITS;
+        this.archived = false;
     }
 
     /**
@@ -152,5 +156,38 @@ public class Module {
                            Integer weightage) throws ModuleSyncException {
         assert taskList != null : "Task list must be initialized";
         return taskList.addDeadline(code, description, by, weightage);
+    }
+
+    // -------------------------------------------------------------------------
+    // Archive — for teammate's archive command to call
+    // -------------------------------------------------------------------------
+
+    /**
+     * Returns whether this module has been archived.
+     *
+     * @return {@code true} if archived, {@code false} if active
+     */
+    public boolean isArchived() {
+        return archived;
+    }
+
+    /**
+     * Sets the archived status of this module.
+     * Typically called by a teammate's {@code module archive /mod <CODE>} command.
+     *
+     * @param archived {@code true} to archive this module, {@code false} to unarchive
+     */
+    public void setArchived(boolean archived) {
+        this.archived = archived;
+    }
+
+    /**
+     * Returns whether this module is read-only.
+     * A module is read-only when it has been archived.
+     *
+     * @return {@code true} if the user should not be allowed to modify tasks in this module
+     */
+    public boolean isReadOnly() {
+        return archived;
     }
 }

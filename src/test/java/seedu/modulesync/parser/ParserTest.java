@@ -5,10 +5,12 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import org.junit.jupiter.api.Test;
 
 import seedu.modulesync.command.AddTodoCommand;
-import seedu.modulesync.command.ListNotDoneCommand;
+import seedu.modulesync.command.ArchiveModuleCommand;
 import seedu.modulesync.command.ListModulesCommand;
+import seedu.modulesync.command.ListNotDoneCommand;
 import seedu.modulesync.command.MarkCommand;
 import seedu.modulesync.command.SemesterStatsCommand;
+import seedu.modulesync.command.UnarchiveModuleCommand;
 import seedu.modulesync.command.UnmarkCommand;
 import seedu.modulesync.exception.ModuleSyncException;
 
@@ -68,5 +70,27 @@ class ParserTest {
         Parser parser = new Parser();
         assertTrue(parser.parse("modules") instanceof ListModulesCommand);
         assertTrue(parser.parse("semesterstats") instanceof SemesterStatsCommand);
+    }
+
+    @Test
+    void parse_moduleArchive_returnsArchiveModuleCommand() throws ModuleSyncException {
+        Parser parser = new Parser();
+        assertTrue(parser.parse("module archive /mod CS2113") instanceof ArchiveModuleCommand);
+        assertTrue(parser.parse("module archive /mod CS3243") instanceof ArchiveModuleCommand);
+    }
+
+    @Test
+    void parse_moduleUnarchive_returnsUnarchiveModuleCommand() throws ModuleSyncException {
+        Parser parser = new Parser();
+        assertTrue(parser.parse("module unarchive /mod CS2113") instanceof UnarchiveModuleCommand);
+        assertTrue(parser.parse("module unarchive /mod CS3243") instanceof UnarchiveModuleCommand);
+    }
+
+    @Test
+    void parse_moduleArchiveInvalidFormat_throws() {
+        Parser parser = new Parser();
+        assertThrows(ModuleSyncException.class, () -> parser.parse("module archive"));
+        assertThrows(ModuleSyncException.class, () -> parser.parse("module archive /mod"));
+        assertThrows(ModuleSyncException.class, () -> parser.parse("module unarchive"));
     }
 }

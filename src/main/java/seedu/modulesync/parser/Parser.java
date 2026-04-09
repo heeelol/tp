@@ -7,6 +7,7 @@ import java.time.format.DateTimeParseException;
 
 import seedu.modulesync.command.AddDeadlineCommand;
 import seedu.modulesync.command.AddTodoCommand;
+import seedu.modulesync.command.ArchiveModuleCommand;
 import seedu.modulesync.command.CapCommand;
 import seedu.modulesync.command.CheckConflictsCommand;
 import seedu.modulesync.command.CheckUrgentCommand;
@@ -24,6 +25,7 @@ import seedu.modulesync.command.SemesterStatsCommand;
 import seedu.modulesync.command.SetDeadlineCommand;
 import seedu.modulesync.command.SetWeightCommand;
 import seedu.modulesync.command.StatsCommand;
+import seedu.modulesync.command.UnarchiveModuleCommand;
 import seedu.modulesync.command.UnmarkCommand;
 import seedu.modulesync.exception.ModuleSyncException;
 import seedu.modulesync.semester.SemesterBook;
@@ -48,6 +50,7 @@ public class Parser {
     private static final String CMD_SETDEADLINE = "setdeadline";
     private static final String CMD_STATS = "stats";
     private static final String CMD_MODULES = "modules";
+    private static final String CMD_MODULE = "module";
     private static final String CMD_SEMESTER_STATS = "semesterstats";
     private static final String CMD_SEMESTER = "semester";
     private static final String CMD_CAP = "cap";
@@ -60,6 +63,8 @@ public class Parser {
     private static final String PREFIX_TASK = "task ";
     private static final String PREFIX_DUE = "due ";
     private static final String PREFIX_WEIGHTAGE = "w ";
+    private static final String PREFIX_ARCHIVE = "archive";
+    private static final String PREFIX_UNARCHIVE = "unarchive";
 
     private static final int CMD_ADD_LENGTH = 3;
     private static final int CMD_MARK_LENGTH = 4;
@@ -68,6 +73,7 @@ public class Parser {
     private static final int CMD_SETWEIGHT_LENGTH = 9;
     private static final int CMD_SETDEADLINE_LENGTH = 11;
     private static final int CMD_STATS_LENGTH = 5;
+    private static final int CMD_MODULE_LENGTH = 6;
 
     private static final int PREFIX_MOD_LENGTH = 4;
     private static final int PREFIX_TASK_LENGTH = 5;
@@ -144,6 +150,9 @@ public class Parser {
         }
         if (trimmed.toLowerCase().startsWith(CMD_SEMESTER)) {
             return parseSemester(trimmed);
+        }
+        if (trimmed.toLowerCase().startsWith(CMD_MODULE)) {
+            return parseModule(trimmed);
         }
         if (trimmed.toLowerCase().startsWith(CMD_ADD)) {
             return parseAdd(trimmed);
@@ -582,6 +591,106 @@ public class Parser {
         }
         
         throw new ModuleSyncException("Unknown semester command. Try: semester list");
+    }
+
+    /**
+     * Parses a "module" command and returns the appropriate module-level command.
+     * Supports:
+     * - {@code module archive /mod MODULECODE}
+     * - {@code module unarchive /mod MODULECODE}
+     *
+     * @param input the full module command string
+     * @return the appropriate module command
+     * @throws ModuleSyncException if the command format is invalid or unknown
+     */
+    private Command parseModule(String input) throws ModuleSyncException {
+        String remainder = extractRemainder(input, CMD_MODULE_LENGTH);
+        
+        if (remainder.isEmpty()) {
+            throw new ModuleSyncException("Usage: module archive /mod MODULECODE or module unarchive /mod MODULECODE");
+        }
+
+        String[] parts = remainder.split("\\s+", 2);
+        String subcommand = parts[0].toLowerCase();
+        String args = parts.length > 1 ? parts[1] : "";
+
+        if (subcommand.equals(PREFIX_ARCHIVE)) {
+            return parseModuleArchive(args);
+        } else if (subcommand.equals(PREFIX_UNARCHIVE)) {
+            return parseModuleUnarchive(args);
+        }
+
+        throw new ModuleSyncException("Unknown module command. Try: module archive /mod MODULECODE");
+    }
+
+    /**
+     * Parses the module archive subcommand.
+     *
+     * @param args the arguments after the "archive" keyword
+     * @return an {@link ArchiveModuleCommand}
+     * @throws ModuleSyncException if the module code is missing or malformed
+     */
+    private Command parseModuleArchive(String args) throws ModuleSyncException {
+        if (args.isEmpty()) {
+            throw new ModuleSyncException("Usage: module archive /mod MODULECODE");
+        }
+
+        String[] tokens = args.split("/");
+        String moduleCode = null;
+        for (String token : tokens) {
+            String trimmed = token.trim();
+            if (trimmed.isEmpty()) {
+                continue;
+            }
+            if (trimmed.toLowerCase().startsWith("mod")) {
+                // Extract everything after "mod "
+                if (trimmed.length() > 3) {
+                    moduleCode = trimmed.substring(3).trim();
+                }
+                break;
+            }
+        }
+
+        if (moduleCode == null || moduleCode.isEmpty()) {
+            throw new ModuleSyncException("Usage: module archive /mod MODULECODE");
+        }
+
+        return new ArchiveModuleCommand(moduleCode);
+    }
+
+    /**
+     * Parses the module unarchive subcommand.
+     *
+     * @param args the arguments after the "unarchive" keyword
+     * @return an {@link UnarchiveModuleCommand}
+     * @throws ModuleSyncException if the module code is missing or malformed
+     */
+    private Command parseModuleUnarchive(String args) throws ModuleSyncException {
+        if (args.isEmpty()) {
+            throw new ModuleSyncException("Usage: module unarchive /mod MODULECODE");
+        }
+
+        String[] tokens = args.split("/");
+        String moduleCode = null;
+        for (String token : tokens) {
+            String trimmed = token.trim();
+            if (trimmed.isEmpty()) {
+                continue;
+            }
+            if (trimmed.toLowerCase().startsWith("mod")) {
+                // Extract everything after "mod "
+                if (trimmed.length() > 3) {
+                    moduleCode = trimmed.substring(3).trim();
+                }
+                break;
+            }
+        }
+
+        if (moduleCode == null || moduleCode.isEmpty()) {
+            throw new ModuleSyncException("Usage: module unarchive /mod MODULECODE");
+        }
+
+        return new UnarchiveModuleCommand(moduleCode);
     }
 }
 
