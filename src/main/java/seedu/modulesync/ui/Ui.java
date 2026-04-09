@@ -532,7 +532,7 @@ public class Ui {
      * @param active              count of currently active (not done) tasks
      * @param avgDaysBeforeDeadline average days before deadline at completion time (NaN if unavailable)
      */
-    //@@author Huang-Hau-Shuan
+
     public void showModuleStats(String moduleCode, int total, int completedOnTime,
                                 int completedLate, int active, double avgDaysBeforeDeadline) {
         assert moduleCode != null && !moduleCode.isBlank() : "Module code must not be blank for stats display";
@@ -599,11 +599,15 @@ public class Ui {
         assert moduleBook != null : "ModuleBook must not be null";
 
         int moduleCount = moduleBook.getModules().size();
+        if (moduleCount == 0) {
+            System.out.println("No modules registered. Add tasks first to see semester statistics.");
+            return;
+        }
+
         int totalTasks = 0;
         int doneTasks = 0;
         int todoCount = 0;
         int deadlineCount = 0;
-
         int weightedTaskCount = 0;
         int totalWeightage = 0;
         int doneWeightage = 0;
@@ -629,11 +633,6 @@ public class Ui {
             }
         }
 
-        if (moduleCount == 0) {
-            System.out.println("No modules registered. Add tasks first to see semester statistics.");
-            return;
-        }
-
         System.out.println("Semester statistics:");
         System.out.println("Modules: " + moduleCount);
 
@@ -654,30 +653,56 @@ public class Ui {
         System.out.println("Work distribution by module:");
         int index = 1;
         for (Module module : moduleBook.getModules()) {
-            int moduleTotal = module.getTasks().size();
-            int moduleDone = 0;
-            int moduleWeightTotal = 0;
-            int moduleWeightDone = 0;
+            ModuleStatLine line = computeModuleStatLine(module);
+            System.out.println(index + ". " + module.getCode() + ": " + line.total + " task(s) | done "
+                    + line.done + " | " + line.weightSummary);
+            index++;
+        }
+    }
 
-            for (Task task : module.getTasks().asUnmodifiableList()) {
+    /**
+     * Computes the per-module statistics needed for the work-distribution line.
+     *
+     * @param module the module to inspect
+     * @return a {@link ModuleStatLine} with task counts and a formatted weight summary
+     */
+    private ModuleStatLine computeModuleStatLine(Module module) {
+        assert module != null : "Module must not be null when computing stat line";
+        int total = module.getTasks().size();
+        int done = 0;
+        int weightTotal = 0;
+        int weightDone = 0;
+
+        for (Task task : module.getTasks().asUnmodifiableList()) {
+            if (task.isDone()) {
+                done++;
+            }
+            if (task.hasWeightage()) {
+                weightTotal += task.getWeightage();
                 if (task.isDone()) {
-                    moduleDone++;
-                }
-                if (task.hasWeightage()) {
-                    moduleWeightTotal += task.getWeightage();
-                    if (task.isDone()) {
-                        moduleWeightDone += task.getWeightage();
-                    }
+                    weightDone += task.getWeightage();
                 }
             }
+        }
 
-            String weightSummary = moduleWeightTotal > 0
-                    ? ("weightage " + moduleWeightDone + "/" + moduleWeightTotal)
-                    : "weightage n/a";
+        String weightSummary = weightTotal > 0
+                ? ("weightage " + weightDone + "/" + weightTotal)
+                : "weightage n/a";
+        return new ModuleStatLine(total, done, weightSummary);
+    }
 
-            System.out.println(index + ". " + module.getCode() + ": " + moduleTotal + " task(s) | done "
-                    + moduleDone + " | " + weightSummary);
-            index++;
+    /**
+     * Value object holding the computed per-module statistics for the work-distribution display.
+     */
+    private static class ModuleStatLine {
+        final int total;
+        final int done;
+        final String weightSummary;
+
+        ModuleStatLine(int total, int done, String weightSummary) {
+            this.total = total;
+            this.done = done;
+            this.weightSummary = weightSummary;
         }
     }
 
@@ -690,7 +715,6 @@ public class Ui {
      *
      * @param semesterBook the semester book containing the active semester
      */
-    //@@author Huang-Hau-Shuan
     public void showCurrentSemester(SemesterBook semesterBook) {
         String name = semesterBook.getCurrentSemesterName();
         if (name == null) {

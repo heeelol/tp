@@ -8,7 +8,6 @@ import seedu.modulesync.storage.Storage;
 import seedu.modulesync.task.Task;
 import seedu.modulesync.ui.Ui;
 
-//@@author Huang-Hau-Shuan
 /**
  * Command that assigns or updates the weightage of an existing task,
  * identified by its global display index shown in {@code list}.

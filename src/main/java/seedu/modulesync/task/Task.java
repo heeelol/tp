@@ -6,6 +6,7 @@ public abstract class Task {
     private static final int DEFAULT_PRIORITY_SCORE = 0;
     private static final String PRIORITY_PREFIX = " [Priority: ";
     private static final String PRIORITY_SUFFIX = "]";
+    private static final String COMPLETED_PREFIX = "completed:";
 
     private final String moduleCode;
     private final String description;
@@ -120,8 +121,8 @@ public abstract class Task {
         }
 
         if (completedAt != null) {
-            fields.add("completed:" +
-                    completedAt.format(java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")));
+            fields.add(COMPLETED_PREFIX
+                    + completedAt.format(java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")));
         }
 
         return String.join(" | ", fields);

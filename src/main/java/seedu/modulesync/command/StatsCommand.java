@@ -13,7 +13,6 @@ import seedu.modulesync.task.Deadline;
 import seedu.modulesync.task.Task;
 import seedu.modulesync.ui.Ui;
 
-//@@author Huang-Hau-Shuan
 /**
  * Command that displays task completion statistics for a given module.
  *
@@ -124,7 +123,7 @@ public class StatsCommand extends Command {
     /**
      * Value object holding the computed statistics for a module.
      */
-    static class ModuleStats {
+    private static class ModuleStats {
         final int totalTasks;
         final int completedOnTime;
         final int completedLate;
