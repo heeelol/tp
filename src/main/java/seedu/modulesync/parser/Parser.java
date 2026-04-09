@@ -13,6 +13,7 @@ import seedu.modulesync.command.CheckConflictsCommand;
 import seedu.modulesync.command.CheckUrgentCommand;
 import seedu.modulesync.command.Command;
 import seedu.modulesync.command.DeleteCommand;
+import seedu.modulesync.command.EditDeadlineCommand;
 import seedu.modulesync.command.ExitCommand;
 import seedu.modulesync.command.ListCommand;
 import seedu.modulesync.command.ListDeadlinesCommand;
@@ -51,6 +52,7 @@ public class Parser {
     private static final String CMD_DELETE = "delete";
     private static final String CMD_SETWEIGHT = "setweight";
     private static final String CMD_SETDEADLINE = "setdeadline";
+    private static final String CMD_EDITDEADLINE = "editdeadline";
     private static final String CMD_STATS = "stats";
     private static final String CMD_MODULES = "modules";
     private static final String CMD_GRADES = "grades";
@@ -77,6 +79,7 @@ public class Parser {
     private static final int CMD_DELETE_LENGTH = 6;
     private static final int CMD_SETWEIGHT_LENGTH = 9;
     private static final int CMD_SETDEADLINE_LENGTH = 11;
+    private static final int CMD_EDITDEADLINE_LENGTH = 12;
     private static final int CMD_STATS_LENGTH = 5;
     private static final int CMD_MODULE_LENGTH = 6;
 
@@ -182,6 +185,9 @@ public class Parser {
         }
         if (trimmed.toLowerCase().startsWith(CMD_SETDEADLINE)) {
             return parseSetDeadline(trimmed);
+        }
+        if (trimmed.toLowerCase().startsWith(CMD_EDITDEADLINE)) {
+            return parseEditDeadline(trimmed);
         }
         if (trimmed.toLowerCase().startsWith(CMD_STATS)) {
             return parseStats(trimmed);
@@ -459,6 +465,36 @@ public class Parser {
         try {
             LocalDateTime byDate = parseDateTime(due);
             return new SetDeadlineCommand(taskNumber, byDate);
+        } catch (DateTimeParseException e) {
+            throw new ModuleSyncException("Invalid date format. Use yyyy-MM-dd or yyyy-MM-dd-HHmm");
+        }
+    }
+
+    /**
+     * Parses an "editdeadline" command.
+     * Format: {@code editdeadline TASK_NUMBER /by YYYY-MM-DD[-HHmm]}
+     *
+     * @param input the full editdeadline command string
+     * @return an {@link EditDeadlineCommand} with the specified task number and deadline
+     * @throws ModuleSyncException if the arguments are missing or invalid
+     */
+    private Command parseEditDeadline(String input) throws ModuleSyncException {
+        String remainder = extractRemainder(input, CMD_EDITDEADLINE_LENGTH);
+        if (remainder.isEmpty()) {
+            throw new ModuleSyncException("Usage: editdeadline TASK_NUMBER /by YYYY-MM-DD[-HHmm]");
+        }
+        String[] tokens = remainder.split("/by");
+        if (tokens.length < 2) {
+            throw new ModuleSyncException("Usage: editdeadline TASK_NUMBER /by YYYY-MM-DD[-HHmm]");
+        }
+        int taskNumber = parseTaskNumber(tokens[0].trim(), CMD_EDITDEADLINE);
+        String due = tokens[1].trim();
+        if (due.isEmpty()) {
+            throw new ModuleSyncException("Usage: editdeadline TASK_NUMBER /by YYYY-MM-DD[-HHmm]");
+        }
+        try {
+            LocalDateTime byDate = parseDateTime(due);
+            return new EditDeadlineCommand(taskNumber, byDate);
         } catch (DateTimeParseException e) {
             throw new ModuleSyncException("Invalid date format. Use yyyy-MM-dd or yyyy-MM-dd-HHmm");
         }
