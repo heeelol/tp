@@ -2,7 +2,6 @@ package seedu.modulesync.semester;
 
 import seedu.modulesync.module.ModuleBook;
 
-//@@author Huang-Hau-Shuan
 /**
  * Represents a single academic semester (e.g. "AY2526-S2").
  *

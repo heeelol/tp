@@ -532,7 +532,7 @@ public class Ui {
      * @param active              count of currently active (not done) tasks
      * @param avgDaysBeforeDeadline average days before deadline at completion time (NaN if unavailable)
      */
-    //@@author Huang-Hau-Shuan
+
     public void showModuleStats(String moduleCode, int total, int completedOnTime,
                                 int completedLate, int active, double avgDaysBeforeDeadline) {
         assert moduleCode != null && !moduleCode.isBlank() : "Module code must not be blank for stats display";

@@ -9,7 +9,6 @@ import java.util.logging.Logger;
 import seedu.modulesync.exception.ModuleSyncException;
 import seedu.modulesync.module.ModuleBook;
 
-//@@author Huang-Hau-Shuan
 /**
  * The central registry of all semesters in the application.
  *

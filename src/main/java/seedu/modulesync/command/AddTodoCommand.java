@@ -8,7 +8,6 @@ import seedu.modulesync.storage.Storage;
 import seedu.modulesync.task.Task;
 import seedu.modulesync.ui.Ui;
 
-//@@author Huang-Hau-Shuan
 /**
  * Command that adds a new to-do task to a specified module, with an optional weightage.
  */

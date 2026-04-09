@@ -19,7 +19,6 @@ import seedu.modulesync.task.Deadline;
 import seedu.modulesync.task.Task;
 import seedu.modulesync.task.Todo;
 
-//@@author Huang-Hau-Shuan
 /**
  * Handles reading and writing of task data (and module metadata) to a persistent file.
  *

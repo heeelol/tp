@@ -13,7 +13,6 @@ import seedu.modulesync.module.ModuleBook;
 import seedu.modulesync.semester.Semester;
 import seedu.modulesync.semester.SemesterBook;
 
-//@@author Huang-Hau-Shuan
 /**
  * Handles the multi-semester file layout on disk.
  *

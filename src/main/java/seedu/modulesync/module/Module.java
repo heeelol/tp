@@ -4,7 +4,6 @@ import seedu.modulesync.exception.ModuleSyncException;
 import seedu.modulesync.task.Task;
 import seedu.modulesync.task.TaskList;
 
-//@@author Huang-Hau-Shuan
 /**
  * Represents a single academic module (e.g. "CS2113") within a semester.
  *

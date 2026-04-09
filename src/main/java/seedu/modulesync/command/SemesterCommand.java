@@ -3,7 +3,6 @@ package seedu.modulesync.command;
 import seedu.modulesync.semester.SemesterBook;
 import seedu.modulesync.storage.SemesterStorage;
 
-//@@author Huang-Hau-Shuan
 /**
  * Base class for commands that operate on the semester lifecycle rather than on individual tasks.
  *

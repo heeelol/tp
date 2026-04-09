@@ -13,7 +13,6 @@ import seedu.modulesync.task.Deadline;
 import seedu.modulesync.task.Task;
 import seedu.modulesync.ui.Ui;
 
-//@@author Huang-Hau-Shuan
 /**
  * Command that displays task completion statistics for a given module.
  *
