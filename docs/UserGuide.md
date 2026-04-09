@@ -101,6 +101,10 @@ The output includes:
 * recorded grade, if one exists
 * archived status, if the module has been archived
 
+Example:
+
+* `modules`
+
 ### Viewing semester statistics: `semesterstats`
 
 Shows an overall summary across all tracked modules in the active semester.
@@ -114,6 +118,10 @@ The summary includes:
 * breakdown of todo and deadline tasks
 * weightage completion, if any tasks have weightage
 * per-module workload summary
+
+Example:
+
+* `semesterstats`
 
 ### Listing not-done tasks for a module: `list /notdone`
 
@@ -184,65 +192,10 @@ Examples:
 
 Adds a deadline to an existing task, or updates the deadline of an existing deadline task.
 
-
-### Archiving a module: `module archive`
-Archives a module to keep your active workspace clean while retaining its data and history. Archived modules are read-only and do not appear in the main task list, but their data remains in your records.
-
-Format: `module archive /mod MODULE_CODE`
-
-* The module must exist and not already be archived.
-* Archived modules will appear with an `[archived]` tag in the `modules` list.
-* Archived modules cannot have new tasks added to them; you must unarchive first.
-
-Examples:
-
-* `module archive /mod CS2113` — archives the CS2113 module
-
-### Unarchiving a module: `module unarchive`
-Unarchives a previously archived module, allowing you to add and modify tasks again.
-
-Format: `module unarchive /mod MODULE_CODE`
-
-* The module must exist and already be archived.
-
-Examples:
-
-* `module unarchive /mod CS2113` — unarchives the CS2113 module
-
-### Initializing a new semester: `semester new`
-Creates a new semester and switches to it, allowing you to start a fresh tracking cycle with a clean module list.
-
-Format: `semester new SEMESTER_NAME`
-
-* `SEMESTER_NAME` is a unique identifier for the semester (e.g., `AY2526-S2`, `Spring2026`).
-* If the semester already exists, you will be switched to it instead of creating a new one.
-* All semesters are saved automatically in your data folder for future reference.
-
-Examples:
-
-* `semester new AY2526-S2` — creates and switches to the new semester AY2526-S2
-* `semester new AY2627-S1` — creates and switches to the new semester AY2627-S1
-
-### Recording a grade: `grade`
-Records your final grade or S/U (Satisfactory/Unsatisfactory) status for a module, creating a permanent academic record.
-
-Format: `grade /mod MODULE_CODE /grade GRADE_VALUE`
-
-* `GRADE_VALUE` can be any letter grade (e.g., `A+`, `A`, `B+`, `B`, `C`, etc.) or `S` (Satisfactory) / `U` (Unsatisfactory).
-* Grades are stored in uppercase regardless of how you enter them.
-* You can update a grade by entering the command again with a new value.
-* Grades appear when you use the `modules` command to view your module list.
-
-Examples:
-
-* `grade /mod CS2113 /grade A+` — records an A+ for CS2113
-* `grade /mod CS2040 /grade S` — records a Satisfactory grade for CS2040
-* `grade /mod MA1521 /grade U` — records an Unsatisfactory grade for MA1521
-
-### Exiting the application: `bye`
-Closes the application.
-
 Format: `setdeadline TASK_NUMBER /by YYYY-MM-DD[-HHmm]`
+
+* `TASK_NUMBER` is the global display index shown by `list`.
+* `YYYY-MM-DD` is interpreted as `23:59` on that date.
 
 Examples:
 
@@ -347,17 +300,27 @@ Example output:
 Now viewing AY2525-S1 [read-only]. Use 'semester switch AY2525-S2' to return.
 ```
 
-### Hiding an inactive module: `module archive`
+### Archiving a module: `module archive`
 
 Archives a module in the active semester so it no longer appears in the main `list` and `list /deadlines` views.
 
 Format: `module archive /mod MODULE_CODE`
+
+Example:
+
+* `module archive /mod CS1231S`
+
+Archived modules still appear in `modules`, and you can restore them later with `module unarchive`.
 
 ### Restoring an archived module: `module unarchive`
 
 Restores a module that was hidden with `module archive`.
 
 Format: `module unarchive /mod MODULE_CODE`
+
+Example:
+
+* `module unarchive /mod CS1231S`
 
 ### Exiting the application: `bye`
 
@@ -432,6 +395,10 @@ for that command.
 | View grade history | `grades list` |
 | List tracked semesters | `semester list` |
 | Create and switch to a semester | `semester new SEMESTER_NAME` |
+| Switch to another semester | `semester switch SEMESTER_NAME` |
+| Archive a module | `module archive /mod MODULE_CODE` |
+| Restore an archived module | `module unarchive /mod MODULE_CODE` |
+| Exit application | `bye` |
 | Switch to another semester | `semester switch SEMESTER_NAME` |
 | Archive a module | `module archive /mod MODULE_CODE` |
 | Restore an archived module | `module unarchive /mod MODULE_CODE` |
