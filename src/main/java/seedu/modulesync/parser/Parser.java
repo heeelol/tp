@@ -15,6 +15,7 @@ import seedu.modulesync.command.CheckUrgentCommand;
 import seedu.modulesync.command.Command;
 import seedu.modulesync.command.DeleteCommand;
 import seedu.modulesync.command.EditDeadlineCommand;
+import seedu.modulesync.command.EditWeightCommand;
 import seedu.modulesync.command.ExitCommand;
 import seedu.modulesync.command.GradeCommand;
 import seedu.modulesync.command.ListCommand;
@@ -54,6 +55,7 @@ public class Parser {
     private static final String CMD_UNMARK = "unmark";
     private static final String CMD_DELETE = "delete";
     private static final String CMD_SETWEIGHT = "setweight";
+    private static final String CMD_EDITWEIGHT = "editweight";
     private static final String CMD_SETDEADLINE = "setdeadline";
     private static final String CMD_EDITDEADLINE = "editdeadline";
     private static final String CMD_STATS = "stats";
@@ -81,6 +83,7 @@ public class Parser {
     private static final int CMD_UNMARK_LENGTH = 6;
     private static final int CMD_DELETE_LENGTH = 6;
     private static final int CMD_SETWEIGHT_LENGTH = 9;
+    private static final int CMD_EDITWEIGHT_LENGTH = 10;
     private static final int CMD_SETDEADLINE_LENGTH = 11;
     private static final int CMD_EDITDEADLINE_LENGTH = 12;
     private static final int CMD_STATS_LENGTH = 5;
@@ -104,12 +107,15 @@ public class Parser {
     private static final String ADD_USAGE = "Usage: add /mod MOD /task DESCRIPTION [/due YYYY-MM-DD]";
     private static final String UNKNOWN_COMMAND_MSG = "Unknown command. Try: add /mod MOD /task TASK";
 
-    /** Held so semester-level commands can be constructed with the shared context. */
+    /**
+     * Held so semester-level commands can be constructed with the shared context.
+     */
     private final SemesterBook semesterBook;
     private final SemesterStorage semesterStorage;
 
     /**
-     * Constructs a Parser with semester context for constructing semester-level commands.
+     * Constructs a Parser with semester context for constructing semester-level
+     * commands.
      *
      * @param semesterBook    the application's semester book
      * @param semesterStorage the semester-level storage
@@ -129,11 +135,13 @@ public class Parser {
     }
 
     /**
-     * Parses the given raw input string and returns the corresponding {@link Command}.
+     * Parses the given raw input string and returns the corresponding
+     * {@link Command}.
      *
      * @param input the raw user input
      * @return the parsed {@link Command}
-     * @throws ModuleSyncException if the input is empty or does not match any known command
+     * @throws ModuleSyncException if the input is empty or does not match any known
+     *                             command
      */
     public Command parse(String input) throws ModuleSyncException {
         String trimmed = input.trim();
@@ -185,6 +193,9 @@ public class Parser {
         if (trimmed.toLowerCase().startsWith(CMD_SETWEIGHT)) {
             return parseSetWeight(trimmed);
         }
+        if (trimmed.toLowerCase().startsWith(CMD_EDITWEIGHT)) {
+            return parseEditWeight(trimmed);
+        }
         if (trimmed.toLowerCase().startsWith(CMD_SETDEADLINE)) {
             return parseSetDeadline(trimmed);
         }
@@ -223,7 +234,8 @@ public class Parser {
      *
      * @param input the full add command string
      * @return the appropriate add command
-     * @throws ModuleSyncException if required fields are missing or the date format is invalid
+     * @throws ModuleSyncException if required fields are missing or the date format
+     *                             is invalid
      */
     private Command parseAdd(String input) throws ModuleSyncException {
         String remainder = extractRemainder(input, CMD_ADD_LENGTH);
@@ -257,7 +269,8 @@ public class Parser {
      *
      * @param input the full grade command string
      * @return a {@link GradeCommand} with the parsed module code and grade
-     * @throws ModuleSyncException if the module code or grade is missing or malformed
+     * @throws ModuleSyncException if the module code or grade is missing or
+     *                             malformed
      */
     private Command parseGrade(String input) throws ModuleSyncException {
         String remainder = extractRemainder(input, CMD_GRADE_LENGTH);
@@ -284,7 +297,8 @@ public class Parser {
      *
      * @param raw the raw weightage string, or null if the /w flag was absent
      * @return the parsed weightage (0–100), or null
-     * @throws ModuleSyncException if the value is not a valid integer or out of range
+     * @throws ModuleSyncException if the value is not a valid integer or out of
+     *                             range
      */
     private Integer parseWeightage(String raw) throws ModuleSyncException {
         if (raw == null || raw.isEmpty()) {
@@ -306,15 +320,15 @@ public class Parser {
     /**
      * Builds an {@link AddDeadlineCommand} by parsing the due date string.
      *
-     * @param module the module code
-     * @param task   the task description
-     * @param due    the raw due date string
+     * @param module    the module code
+     * @param task      the task description
+     * @param due       the raw due date string
      * @param weightage the optional weightage (0–100), or null
      * @return a new {@link AddDeadlineCommand}
      * @throws ModuleSyncException if the due date string cannot be parsed
      */
     private Command buildAddDeadlineCommand(String module, String task, String due,
-                                           Integer weightage) throws ModuleSyncException {
+            Integer weightage) throws ModuleSyncException {
         try {
             LocalDateTime byDate = parseDateTime(due);
             assert byDate != null : "Parsed deadline must not be null";
@@ -358,9 +372,9 @@ public class Parser {
     /**
      * Extracts a named field value from the parsed slash-delimited tokens.
      *
-     * @param tokens        array of tokens split by "/"
-     * @param prefix        the prefix to match (e.g. "mod ", "task ")
-     * @param prefixLength  the character length of the prefix
+     * @param tokens       array of tokens split by "/"
+     * @param prefix       the prefix to match (e.g. "mod ", "task ")
+     * @param prefixLength the character length of the prefix
      * @return the trimmed field value, or {@code null} if not found
      */
     private String extractFieldFromTokens(String[] tokens, String prefix, int prefixLength) {
@@ -399,7 +413,7 @@ public class Parser {
 
         if (remainder.toLowerCase().startsWith(PREFIX_LIST_MOD) || remainder.toLowerCase().contains("/all")) {
             String[] tokens = remainder.split("\\s+");
-            if (tokens.length != 3 || !tokens[0].equalsIgnoreCase(PREFIX_LIST_MOD) 
+            if (tokens.length != 3 || !tokens[0].equalsIgnoreCase(PREFIX_LIST_MOD)
                     || !tokens[2].equalsIgnoreCase("/all")) {
                 throw new ModuleSyncException("Usage: mark /mod MODULE_CODE /all");
             }
@@ -446,8 +460,10 @@ public class Parser {
      * Format: {@code setweight TASK_NUMBER PERCENT}
      *
      * @param input the full setweight command string
-     * @return a {@link SetWeightCommand} with the specified task number and weightage
-     * @throws ModuleSyncException if the arguments are missing, non-integer, or out of range
+     * @return a {@link SetWeightCommand} with the specified task number and
+     *         weightage
+     * @throws ModuleSyncException if the arguments are missing, non-integer, or out
+     *                             of range
      */
     private Command parseSetWeight(String input) throws ModuleSyncException {
         String remainder = extractRemainder(input, CMD_SETWEIGHT_LENGTH);
@@ -469,11 +485,43 @@ public class Parser {
     }
 
     /**
+     * Parses an "editweight" command.
+     * Format: {@code editweight TASK_NUMBER /w PERCENT}
+     *
+     * @param input the full editweight command string
+     * @return an {@link EditWeightCommand} with the specified task number and
+     *         weightage
+     * @throws ModuleSyncException if the arguments are missing, non-integer, or out
+     *                             of range
+     */
+    private Command parseEditWeight(String input) throws ModuleSyncException {
+        String remainder = extractRemainder(input, CMD_EDITWEIGHT_LENGTH);
+        if (remainder.isEmpty()) {
+            throw new ModuleSyncException("Usage: editweight TASK_NUMBER /w PERCENT");
+        }
+        String[] tokens = remainder.split("/w");
+        if (tokens.length < 2) {
+            throw new ModuleSyncException("Usage: editweight TASK_NUMBER /w PERCENT");
+        }
+        int taskNumber = parseTaskNumber(tokens[0].trim(), CMD_EDITWEIGHT);
+        String weightageRaw = tokens[1].trim();
+        if (weightageRaw.isEmpty()) {
+            throw new ModuleSyncException("Usage: editweight TASK_NUMBER /w PERCENT");
+        }
+        Integer weightage = parseWeightage(weightageRaw);
+        if (weightage == null) {
+            throw new ModuleSyncException("Usage: editweight TASK_NUMBER /w PERCENT");
+        }
+        return new EditWeightCommand(taskNumber, weightage);
+    }
+
+    /**
      * Parses a "setdeadline" command.
      * Format: {@code setdeadline TASK_NUMBER /by YYYY-MM-DD[-HHmm]}
      *
      * @param input the full setdeadline command string
-     * @return a {@link SetDeadlineCommand} with the specified task number and deadline
+     * @return a {@link SetDeadlineCommand} with the specified task number and
+     *         deadline
      * @throws ModuleSyncException if the arguments are missing or invalid
      */
     private Command parseSetDeadline(String input) throws ModuleSyncException {
@@ -503,7 +551,8 @@ public class Parser {
      * Format: {@code editdeadline TASK_NUMBER /by YYYY-MM-DD[-HHmm]}
      *
      * @param input the full editdeadline command string
-     * @return an {@link EditDeadlineCommand} with the specified task number and deadline
+     * @return an {@link EditDeadlineCommand} with the specified task number and
+     *         deadline
      * @throws ModuleSyncException if the arguments are missing or invalid
      */
     private Command parseEditDeadline(String input) throws ModuleSyncException {
@@ -532,7 +581,8 @@ public class Parser {
      * Parses a "list" command, checking for optional filters like /deadlines.
      *
      * @param input the full list command string
-     * @return a {@link ListCommand} or {@link ListDeadlinesCommand} depending on filters
+     * @return a {@link ListCommand} or {@link ListDeadlinesCommand} depending on
+     *         filters
      * @throws ModuleSyncException if an unknown filter is provided
      */
     private Command parseList(String input) throws ModuleSyncException {
@@ -604,7 +654,7 @@ public class Parser {
 
         throw new ModuleSyncException(
                 "Unknown list filter. Try: list, list /mod CODE, list /deadlines, "
-                + "list /top NUMBER or list /notdone /mod MOD");
+                        + "list /top NUMBER or list /notdone /mod MOD");
     }
 
     private boolean containsToken(String[] tokens, String target) {
@@ -676,15 +726,16 @@ public class Parser {
      *
      * @param input the full semester command string
      * @return a corresponding {@link seedu.modulesync.command.SemesterCommand}
-     * @throws ModuleSyncException if the command is unknown or arguments are invalid
+     * @throws ModuleSyncException if the command is unknown or arguments are
+     *                             invalid
      */
     private Command parseSemester(String input) throws ModuleSyncException {
         if (semesterBook == null || semesterStorage == null) {
             throw new ModuleSyncException("Semester commands are not available in this context.");
         }
-        
+
         String remainder = extractRemainder(input, CMD_SEMESTER.length());
-        
+
         if (remainder.isEmpty()) {
             throw new ModuleSyncException("Usage: semester new SEMESTER_NAME or semester list");
         }
@@ -723,7 +774,7 @@ public class Parser {
         if (remainder.toLowerCase().startsWith(CMD_SWITCH)) {
             return parseSemesterSwitch(remainder);
         }
-        
+
         throw new ModuleSyncException("Unknown semester command. Try: semester list or semester switch NAME");
     }
 
@@ -851,4 +902,3 @@ public class Parser {
         return new UnarchiveModuleCommand(moduleCode);
     }
 }
-
