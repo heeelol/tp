@@ -246,13 +246,20 @@ public class Parser {
         String[] tokens = remainder.split("/(?i)(?=(mod |task |due |w |grade ))");
 
         int wCount = 0;
+        int dueCount = 0;
         for (String t : tokens) {
-            if (t.trim().toLowerCase().startsWith(PREFIX_WEIGHTAGE)) {
+            String trimmed = t.trim().toLowerCase();
+            if (trimmed.startsWith(PREFIX_WEIGHTAGE)) {
                 wCount++;
+            } else if (trimmed.startsWith(PREFIX_DUE)) {
+                dueCount++;
             }
         }
         if (wCount > 1) {
             throw new ModuleSyncException("Invalid input! The weightage flag (/w) can only be provided once.");
+        }
+        if (dueCount > 1) {
+            throw new ModuleSyncException("Invalid input! The deadline flag (/due) can only be provided once.");
         }
 
         String module = extractFieldFromTokens(tokens, PREFIX_MOD, PREFIX_MOD_LENGTH);
