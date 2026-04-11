@@ -488,6 +488,96 @@ The following class diagram shows the main classes involved in computing semeste
   * Pros: Works for both weighted and unweighted tasks.
   * Cons: The weightage completion metric may be absent until the user assigns weightage.
 
+//@@author codefuul
+
+### [Feature] CAP Calculator (`cap`)
+
+#### Implementation
+
+The CAP Calculator feature iterates through the `ModuleBook` to gather grades for all tracked modules. It maps the assigned letter grades (e.g., A+, B, C) to the standard 5.0 scale. To do this accurately, the `CapCommand` includes specific logic to filter out and ignore modules that are marked as CS (Completed Satisfactory) or CU (Completed Unsatisfactory), as well as any modules that are currently ungraded. It calculates both the semester CAP based on the current modules and the cumulative CAP.
+
+#### Sequence Diagram
+
+The following sequence diagram illustrates the interactions when the user executes `cap`:
+
+<img src="images/CapSequenceDiagram.png" alt="Sequence diagram for the cap command" />
+
+> **Note:** The diagram above must be generated from
+> [`docs/diagrams/CapSequenceDiagram.puml`](diagrams/CapSequenceDiagram.puml)
+> and saved as `docs/images/CapSequenceDiagram.png`.
+
+#### Design Considerations
+
+**Aspect: How to compute the CAP value**
+
+* **Alternative 1 (Current choice): Calculate CAP on-the-fly during command execution.**
+  * Pros: No storage overhead, and the calculated CAP is always strictly accurate based on the current state.
+  * Cons: Slightly more computation needed at runtime when the command is called.
+
+* **Alternative 2: Cache the CAP in a variable inside the `ModuleBook`.**
+  * Pros: Faster retrieval for subsequent calls.
+  * Cons: Requires complex state synchronization whenever a grade is added, modified, or removed, which could lead to bugs if the state goes out of sync.
+
+
+### [Feature] Urgent Tasks Filter (`check /urgent`)
+
+#### Implementation
+
+The Urgent Tasks Filter iterates through the task list to identify tasks that need immediate attention. The `CheckUrgentCommand` utilizes Java's `LocalDateTime` to assess deadlines. It first filters out any completed tasks so that only pending work is evaluated. It then identifies incomplete tasks whose deadlines fall strictly within the next 48 hours relative to the current system time. Finally, these filtered tasks undergo a dynamic sort by urgency, ensuring that the tasks due the soonest are displayed first.
+
+#### Sequence Diagram
+
+The following sequence diagram illustrates the interactions when the user executes `check /urgent`:
+
+<img src="images/CheckUrgentSequenceDiagram.png" alt="Sequence diagram for the check /urgent command" />
+
+> **Note:** The diagram above must be generated from
+> [`docs/diagrams/CheckUrgentSequenceDiagram.puml`](diagrams/CheckUrgentSequenceDiagram.puml)
+> and saved as `docs/images/CheckUrgentSequenceDiagram.png`.
+
+#### Design Considerations
+
+**Aspect: When to evaluate the 48-hour urgency window**
+
+* **Alternative 1 (Current choice): Evaluate the 48-hour window dynamically at execution time.**
+  * Pros: Simple application state, reliable, and uses up-to-date system time exactly when requested.
+  * Cons: Has to iterate over the task list at execution time.
+
+* **Alternative 2: Run a background thread that constantly tags tasks as 'urgent'.**
+  * Pros: The UI could immediately highlight urgent tasks without a dedicated command execution.
+  * Cons: Significant overhead and complexity introduced by multi-threading. It is overkill for a simple CLI task tracker.
+
+
+### [Feature] System Logging & Defensive Assertions
+
+#### Implementation
+
+The application integrates `java.util.logging.Logger` combined with a `FileHandler` to silently write execution flows and caught exceptions to a background `duke.log` file. This ensures that debugging details are captured without polluting the CLI UI directly.
+
+Furthermore, Java `assert` statements have been added in critical areas, such as the `DeleteCommand`, to enforce internal invariants and assumptions before executing destructive actions. This defensive programming approach prevents unintended corruption of the `ModuleBook` or application state.
+
+#### Sequence Diagram
+
+The following sequence diagram illustrates the interactions involved when the system invokes defensive assertions and logging:
+
+<img src="images/LoggingSequenceDiagram.png" alt="Sequence diagram for system logging and defensive assertions" />
+
+> **Note:** The diagram above must be generated from
+> [`docs/diagrams/LoggingSequenceDiagram.puml`](diagrams/LoggingSequenceDiagram.puml)
+> and saved as `docs/images/LoggingSequenceDiagram.png`.
+
+#### Design Considerations
+
+**Aspect: Destination for system logs**
+
+* **Alternative 1 (Current choice): Log to a background file (`duke.log`).**
+  * Pros: Maintains a clean, distraction-free user experience in the terminal while preserving diagnostic data for troubleshooting.
+  * Cons: Requires developers to check an external file to view logs.
+
+* **Alternative 2: Log directly to the console/UI.**
+  * Pros: Easier to implement, immediately visible during development.
+  * Cons: Ruins the clean user experience by cluttering the terminal output with internal operational details.
+
 ---
 
 ## Product scope
