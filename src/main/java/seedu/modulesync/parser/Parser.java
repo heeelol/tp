@@ -66,8 +66,6 @@ public class Parser {
     private static final String CMD_GRADES = "grades";
     private static final String CMD_GRADE = "grade";
     private static final String CMD_MODULE = "module";
-    private static final String CMD_MODULEADD = "moduleadd";
-    private static final String CMD_MODULEDELETE = "moduledelete";
     private static final String CMD_SEMESTER = "semester";
     private static final String CMD_SWITCH = "switch";
     private static final String CMD_CAP = "cap";
@@ -95,8 +93,6 @@ public class Parser {
     private static final int CMD_EDITDEADLINE_LENGTH = 12;
     private static final int CMD_STATS_LENGTH = 5;
     private static final int CMD_MODULE_LENGTH = 6;
-    private static final int CMD_MODULEADD_LENGTH = 9;
-    private static final int CMD_MODULEDELETE_LENGTH = 12;
     private static final int CMD_GRADE_LENGTH = 5;
 
     private static final int PREFIX_MOD_LENGTH = 4;
@@ -177,12 +173,6 @@ public class Parser {
         }
         if (trimmed.toLowerCase().startsWith(CMD_SEMESTER)) {
             return parseSemester(trimmed);
-        }
-        if (trimmed.toLowerCase().startsWith(CMD_MODULEADD)) {
-            return parseModuleAdd(trimmed);
-        }
-        if (trimmed.toLowerCase().startsWith(CMD_MODULEDELETE)) {
-            return parseModuleDelete(trimmed);
         }
         if (trimmed.toLowerCase().startsWith(CMD_MODULE)) {
             return parseModule(trimmed);
@@ -285,10 +275,15 @@ public class Parser {
         String due = extractFieldFromTokens(tokens, PREFIX_DUE, PREFIX_DUE_LENGTH);
         String weightageRaw = extractFieldFromTokens(tokens, PREFIX_WEIGHTAGE, PREFIX_WEIGHTAGE_LENGTH);
 
-        if (module == null || module.isEmpty() || task == null || task.isEmpty()) {
+        if (module == null || module.isEmpty()) {
             throw new ModuleSyncException(ADD_USAGE);
         }
         validateModuleCode(module);
+
+        if (task == null || task.isEmpty()) {
+            return new AddModuleCommand(module);
+        }
+        
         assert module != null && !module.trim().isEmpty() : "Module code should be parsed for add command";
         assert task != null && !task.trim().isEmpty() : "Task description should be parsed for add command";
 
@@ -519,6 +514,16 @@ public class Parser {
      */
     private Command parseDelete(String input) throws ModuleSyncException {
         String remainder = extractRemainder(input, CMD_DELETE_LENGTH);
+        
+        if (remainder.toLowerCase().startsWith("module /mod")) {
+            String moduleCode = remainder.substring("module /mod".length()).trim();
+            if (moduleCode.isEmpty()) {
+                throw new ModuleSyncException("Usage: delete module /mod MODULE_CODE");
+            }
+            validateModuleCode(moduleCode);
+            return new DeleteModuleCommand(moduleCode);
+        }
+
         int taskNumber = parseTaskNumber(remainder, CMD_DELETE);
         assert taskNumber > 0 : "Parsed task number must be strictly positive";
         return new DeleteCommand(taskNumber);
@@ -901,42 +906,6 @@ public class Parser {
             throw new ModuleSyncException("Usage: semester switch SEMESTER_NAME");
         }
         return new SwitchSemesterCommand(semesterBook, semesterStorage, semesterName);
-    }
-
-    /**
-     * Parses a "moduleadd" command.
-     * Format: {@code moduleadd /mod MODULE_CODE}
-     */
-    private Command parseModuleAdd(String input) throws ModuleSyncException {
-        String remainder = extractRemainder(input, CMD_MODULEADD_LENGTH);
-        if (remainder.isEmpty()) {
-            throw new ModuleSyncException("Usage: moduleadd /mod MODULE_CODE");
-        }
-        String[] tokens = remainder.split("/(?i)(?=(mod ))");
-        String moduleCode = extractFieldFromTokens(tokens, PREFIX_MOD, PREFIX_MOD_LENGTH);
-        if (moduleCode == null || moduleCode.isEmpty()) {
-            throw new ModuleSyncException("Usage: moduleadd /mod MODULE_CODE");
-        }
-        validateModuleCode(moduleCode);
-        return new AddModuleCommand(moduleCode);
-    }
-
-    /**
-     * Parses a "moduledelete" command.
-     * Format: {@code moduledelete /mod MODULE_CODE}
-     */
-    private Command parseModuleDelete(String input) throws ModuleSyncException {
-        String remainder = extractRemainder(input, CMD_MODULEDELETE_LENGTH);
-        if (remainder.isEmpty()) {
-            throw new ModuleSyncException("Usage: moduledelete /mod MODULE_CODE");
-        }
-        String[] tokens = remainder.split("/(?i)(?=(mod ))");
-        String moduleCode = extractFieldFromTokens(tokens, PREFIX_MOD, PREFIX_MOD_LENGTH);
-        if (moduleCode == null || moduleCode.isEmpty()) {
-            throw new ModuleSyncException("Usage: moduledelete /mod MODULE_CODE");
-        }
-        validateModuleCode(moduleCode);
-        return new DeleteModuleCommand(moduleCode);
     }
 
     /**

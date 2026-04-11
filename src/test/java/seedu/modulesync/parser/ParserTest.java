@@ -39,7 +39,6 @@ class ParserTest {
     @Test
     void parse_missingFields_throws() {
         Parser parser = new Parser();
-        assertThrows(ModuleSyncException.class, () -> parser.parse("add /mod CS2113"));
         assertThrows(ModuleSyncException.class, () -> parser.parse("add /task OnlyTask"));
         assertThrows(ModuleSyncException.class, () -> parser.parse("add"));
     }
@@ -169,20 +168,18 @@ class ParserTest {
     @Test
     void parse_moduleAddAndModuleDelete_returnsCorrectCommands() throws ModuleSyncException {
         Parser parser = new Parser();
-        assertTrue(parser.parse("moduleadd /mod CS1010S") instanceof AddModuleCommand);
-        assertTrue(parser.parse("moduledelete /mod CS1010S") instanceof DeleteModuleCommand);
+        assertTrue(parser.parse("add /mod CS1010S") instanceof AddModuleCommand);
+        assertTrue(parser.parse("delete module /mod CS1010S") instanceof DeleteModuleCommand);
     }
 
     @Test
     void parse_moduleAddAndModuleDeleteInvalidFormat_throws() {
         Parser parser = new Parser();
-        assertThrows(ModuleSyncException.class, () -> parser.parse("moduleadd"));
-        assertThrows(ModuleSyncException.class, () -> parser.parse("moduleadd /mod"));
-        assertThrows(ModuleSyncException.class, () -> parser.parse("moduleadd /mod !@#$"));
+        // missing task/flags throws usage correctly, but bad module code throws exception
+        assertThrows(ModuleSyncException.class, () -> parser.parse("add /mod !@#$"));
         
-        assertThrows(ModuleSyncException.class, () -> parser.parse("moduledelete"));
-        assertThrows(ModuleSyncException.class, () -> parser.parse("moduledelete /mod"));
-        assertThrows(ModuleSyncException.class, () -> parser.parse("moduledelete /mod !@#$"));
+        assertThrows(ModuleSyncException.class, () -> parser.parse("delete module /mod"));
+        assertThrows(ModuleSyncException.class, () -> parser.parse("delete module /mod !@#$"));
     }
 
     @Test
