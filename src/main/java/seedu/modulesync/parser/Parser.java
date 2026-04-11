@@ -285,6 +285,15 @@ public class Parser {
         if (module == null || module.isEmpty() || grade == null || grade.isEmpty()) {
             throw new ModuleSyncException("Usage: grade /mod MODULECODE /grade GRADEVALUE");
         }
+
+        java.util.List<String> validGrades = java.util.List.of(
+                "A+", "A", "A-", "B+", "B", "B-", "C+", "C", "D+", "D", "F", "CS", "CU"
+        );
+        if (!validGrades.contains(grade.trim().toUpperCase())) {
+            throw new ModuleSyncException(
+                    "Invalid grade! Accepted values are: A+, A, A-, B+, B, B-, C+, C, D+, D, F, CS, CU");
+        }
+
         assert module != null && !module.trim().isEmpty() : "Module code should be parsed for grade command";
         assert grade != null && !grade.trim().isEmpty() : "Grade should be parsed for grade command";
 
