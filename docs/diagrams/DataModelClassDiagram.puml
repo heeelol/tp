@@ -7,7 +7,7 @@ class SemesterBook {
     -currentSemesterName: String
     +getCurrentSemester(): Semester
     +getCurrentModuleBook(): ModuleBook
-    +switchOrCreate(name:String): boolean
+    +switchOrCreate(): boolean
     +isCurrentSemesterReadOnly(): boolean
     +archiveCurrentSemester(): void
     +getAllSemesters(): Collection<Semester>
@@ -19,15 +19,15 @@ class Semester {
     +getName(): String
     +getModuleBook(): ModuleBook
     +isArchived(): boolean
-    +setArchived(archived:boolean): void
+    +setArchived(): void
 }
 
 class ModuleBook {
-    +getOrCreate(code:String): Module
-    +getModule(code:String): Module
+    +getOrCreate(): Module
+    +getModule(): Module
     +getModules(): Collection<Module>
-    +getTaskByDisplayIndex(index:int): Task
-    +removeTaskByDisplayIndex(index:int): Task
+    +getTaskByDisplayIndex(): Task
+    +removeTaskByDisplayIndex(): Task
     +countTotalTasks(): int
 }
 
@@ -38,18 +38,17 @@ class Module {
     -archived: boolean
     +getCode(): String
     +getTasks(): TaskList
-    +hasGrade(): boolean
     +getGrade(): String
-    +setGrade(grade:String): void
+    +setGrade(): void
     +getCredits(): int
-    +setCredits(credits:int): void
+    +setCredits(): void
 }
 
 class TaskList {
-    +addTodo(moduleCode:String, description:String, weightage:Integer): Task
-    +addDeadline(moduleCode:String, description:String, by:LocalDateTime, weightage:Integer): Task
+    +addTodo(): Task
+    +addDeadline(): Task
     +asUnmodifiableList(): List<Task>
-    +removeTask(index:int): Task
+    +removeTask(): Task
     +size(): int
 }
 
@@ -64,7 +63,7 @@ abstract class Task {
     +markUndone(): void
     +hasWeightage(): boolean
     +getWeightage(): Integer
-    +setWeightage(weightage:int): void
+    +setWeightage(): void
     +calculatePriorityScore(): int
     +encode(): String
     #{abstract} getTypeCode(): char
@@ -81,11 +80,11 @@ class Deadline {
     +calculatePriorityScore(): int
 }
 
-SemesterBook "1" *--> "0..*" Semester : contains >
-Semester "1" *--> "1" ModuleBook : owns >
-ModuleBook "1" *--> "0..*" Module : tracks >
-Module "1" *--> "1" TaskList : owns >
-TaskList "1" *--> "0..*" Task : stores >
+SemesterBook "1" *--> "0..*" Semester
+Semester "1" *--> "1" ModuleBook
+ModuleBook "1" *--> "0..*" Module
+Module "1" *--> "1" TaskList
+TaskList "1" *--> "0..*" Task
 Task <|-- Todo
 Task <|-- Deadline
 

@@ -1,0 +1,37 @@
+@startuml WeightageValidationActivityDiagram
+
+skinparam activityArrowThickness 2
+skinparam roundcorner 5
+skinparam defaultFontName Arial
+
+start
+
+:User enters add or setweight command;
+
+if (Does input contain /w flag?) then (yes)
+  :Extract weightage token;
+  if (Is weightage token a valid integer?) then (no)
+    :Throw ModuleSyncException\n"Weightage must be an integer";
+    stop
+  else (yes)
+    if (Is value in range 0–100?) then (no)
+      :Throw ModuleSyncException\n"Weightage must be between 0 and 100";
+      stop
+    else (yes)
+      :Set weightage = parsed integer;
+    endif
+  endif
+else (no)
+  :Set weightage = null\n(task will be unweighted);
+endif
+
+if (Would total module weightage exceed 100%?) then (yes)
+  :Throw ModuleSyncException\n"Total weightage would exceed 100%";
+  stop
+else (no)
+  :Construct command with validated weightage;
+  :Execute command — mutate model and save;
+  stop
+endif
+
+@enduml

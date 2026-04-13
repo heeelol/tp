@@ -8,11 +8,11 @@ class ModuleSync {
 }
 
 class Parser {
-    +parse(input:String): Command
+    +parse(): Command
 }
 
 abstract class Command {
-    +{abstract} execute(mb:ModuleBook, s:Storage, ui:Ui): void
+    +{abstract} execute(): void
     +isMutating(): boolean
     +isExit(): boolean
 }
@@ -30,7 +30,6 @@ note right of SemesterCommand
 end note
 
 class AddTodoCommand
-class AddDeadlineCommand
 class SetWeightCommand
 class StatsCommand
 class DeleteCommand
@@ -43,8 +42,8 @@ class ExitCommand
 
 class NewSemesterCommand
 class SwitchSemesterCommand
-class ArchiveModuleCommand
-class UnarchiveModuleCommand
+class ArchiveSemesterCommand
+class UnarchiveSemesterCommand
 class ListSemesterCommand
 
 class ModuleBook
@@ -53,13 +52,12 @@ class Ui
 class SemesterBook
 class SemesterStorage
 
-ModuleSync --> Parser : uses >
-ModuleSync ..> Command : dispatches >
+ModuleSync ..> Parser
+ModuleSync ..> Command
 
-Parser ..> Command : creates >
+Parser ..> Command
 
 Command <|-- AddTodoCommand
-Command <|-- AddDeadlineCommand
 Command <|-- SetWeightCommand
 Command <|-- StatsCommand
 Command <|-- DeleteCommand
@@ -73,8 +71,8 @@ Command <|-- ExitCommand
 Command <|-- SemesterCommand
 SemesterCommand <|-- NewSemesterCommand
 SemesterCommand <|-- SwitchSemesterCommand
-SemesterCommand <|-- ArchiveModuleCommand
-SemesterCommand <|-- UnarchiveModuleCommand
+SemesterCommand <|-- ArchiveSemesterCommand
+SemesterCommand <|-- UnarchiveSemesterCommand
 SemesterCommand <|-- ListSemesterCommand
 
 Command ..> ModuleBook

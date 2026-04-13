@@ -5,76 +5,77 @@ skinparam roundcorner 5
 skinparam maxmessagesize 60
 
 Actor User as user
-Participant "ModuleSync" as app
-Participant "Ui" as ui
-Participant "Parser" as parser
-Participant "SemesterStatsCommand" as cmd
-Participant "ModuleBook" as moduleBook
-Participant "Module" as module
-Participant "TaskList" as taskList
-Participant "Task" as task
+Participant "app:ModuleSync" as app
+Participant "parser:Parser" as parser
+Participant "cmd:SemesterStatsCommand" as cmd
+Participant "ui:Ui" as ui
+Participant "mb:ModuleBook" as moduleBook
+Participant "m:Module" as module
+Participant "tl:TaskList" as taskList
+Participant "t:Task" as task
 
-user -> app : enter "semester stats AY2526-S2"
+note over app, parser
+  Request Lifecycle (parse → dispatch) is
+  described in the Design chapter.
+  Diagram begins at command dispatch.
+end note
+
+user -> app : semester stats
 activate app
-
-app -> ui : readCommand()
-activate ui
-ui --> app : rawInput : String
-deactivate ui
 
 app -> parser : parse(rawInput)
 activate parser
 
-note right of parser
-  Recognises: semester stats SEMESTER_NAME
-end note
-
 create cmd
-parser -> cmd : new SemesterStatsCommand(semesterBook, semesterName)
-parser --> app : cmd : SemesterStatsCommand
+parser -> cmd : SemesterStatsCommand(...)
+activate cmd
+deactivate cmd
+
+parser --> app : cmd:SemesterStatsCommand
 deactivate parser
 
-app -> cmd : execute(moduleBook, storage, ui)
+app -> cmd : execute(mb, s, ui)
 activate cmd
 
-cmd -> ui : showSemesterStatistics(moduleBook)
+cmd -> ui : showSemesterStatistics(mb)
 activate ui
 
 ui -> moduleBook : getModules()
 activate moduleBook
-moduleBook --> ui : modules : Collection<Module>
+moduleBook --> ui : modules:Collection<Module>
 deactivate moduleBook
 
 loop for each module
   ui -> module : getTasks()
   activate module
-  module --> ui : taskList : TaskList
+  module --> ui : tl:TaskList
   deactivate module
 
   ui -> taskList : asUnmodifiableList()
   activate taskList
-  taskList --> ui : tasks : List<Task>
+  taskList --> ui : tasks:List<Task>
   deactivate taskList
 
   loop for each task
     ui -> task : isDone()
     activate task
-    task --> ui : done : boolean
+    task --> ui : done:boolean
     deactivate task
 
     ui -> task : getWeightage()
     activate task
-    task --> ui : weightage : Integer
+    task --> ui : weightage:Integer
     deactivate task
   end
 end
 
-ui --> user : prints semester summary + per-module distribution
+ui --> cmd
 deactivate ui
 
 cmd --> app
 deactivate cmd
 
+app --> user : semester summary + per-module distribution
 deactivate app
 
 @enduml

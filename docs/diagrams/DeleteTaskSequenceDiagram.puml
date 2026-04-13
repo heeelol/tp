@@ -3,24 +3,23 @@
 skinparam sequenceArrowThickness 2
 skinparam roundcorner 5
 skinparam maxmessagesize 60
-skinparam sequenceParticipant underline
 
 Actor User as user
-Participant "ModuleSync" as app
-Participant "Ui" as ui
-Participant "Parser" as parser
-Participant "DeleteCommand" as cmd
-Participant "ModuleBook" as moduleBook
-Participant "Storage" as storage
-Participant "Task" as task
+Participant "app:ModuleSync" as app
+Participant "parser:Parser" as parser
+Participant "cmd:DeleteCommand" as cmd
+Participant "mb:ModuleBook" as moduleBook
+Participant "s:Storage" as storage
+Participant "ui:Ui" as ui
 
-user -> app : enter "delete 3"
+note over app, parser
+  Request Lifecycle (parse → dispatch) is
+  described in the Design chapter.
+  Diagram begins at command dispatch.
+end note
+
+user -> app : delete 3
 activate app
-
-app -> ui : readCommand()
-activate ui
-ui --> app : rawInput
-deactivate ui
 
 app -> parser : parse(rawInput)
 activate parser
@@ -31,31 +30,35 @@ note right of parser
 end note
 
 create cmd
-parser -> cmd : new DeleteCommand(3)
-parser --> app : cmd
+parser -> cmd : DeleteCommand(3)
+activate cmd
+deactivate cmd
+
+parser --> app : cmd:DeleteCommand
 deactivate parser
 
-app -> cmd : execute(moduleBook, storage, ui)
+app -> cmd : execute(mb, s, ui)
 activate cmd
 
 cmd -> moduleBook : removeTaskByDisplayIndex(3)
 activate moduleBook
-moduleBook --> cmd : task
+moduleBook --> cmd : t:Task
 deactivate moduleBook
 
-cmd -> storage : save(moduleBook)
+cmd -> storage : save(mb)
 activate storage
 storage --> cmd
 deactivate storage
 
-cmd -> ui : showTaskDeleted(task, totalTasks)
+cmd -> ui : showTaskDeleted(t, totalTasks)
 activate ui
-ui --> user : prints deleted task + new count
+ui --> cmd
 deactivate ui
 
 cmd --> app
 deactivate cmd
 
+app --> user : deleted task confirmation
 deactivate app
 
 @enduml

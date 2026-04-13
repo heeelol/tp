@@ -1,0 +1,129 @@
+@startuml SemesterLifecycleSequenceDiagram
+
+skinparam sequenceArrowThickness 2
+skinparam roundcorner 5
+skinparam maxmessagesize 80
+
+Actor User as user
+Participant "app:ModuleSync" as app
+Participant "parser:Parser" as parser
+Participant "cmd:SemesterCommand" as cmd
+Participant "sb:SemesterBook" as semesterBook
+Participant "ss:SemesterStorage" as semesterStorage
+Participant "ui:Ui" as ui
+
+note over cmd
+  Concrete subclass is one of:
+  NewSemesterCommand,
+  SwitchSemesterCommand,
+  ArchiveSemesterCommand,
+  UnarchiveSemesterCommand
+end note
+
+user -> app : semester new AY2627-S1
+activate app
+
+app -> parser : parse(rawInput)
+activate parser
+parser --> app : cmd:SemesterCommand
+deactivate parser
+
+note right of app
+  isMutating() returns false for all
+  SemesterCommands — the read-only
+  guard is bypassed entirely.
+end note
+
+app -> cmd : execute(mb, s, ui)
+activate cmd
+
+cmd -> semesterBook : switchOrCreate(...)
+activate semesterBook
+semesterBook --> cmd : created:boolean
+deactivate semesterBook
+
+cmd -> semesterStorage : save(sb)
+activate semesterStorage
+semesterStorage --> cmd
+deactivate semesterStorage
+
+cmd -> ui : showMessage(...)
+activate ui
+ui --> cmd
+deactivate ui
+
+cmd --> app
+deactivate cmd
+
+app --> user : "Created and switched to new semester: AY2627-S1"
+deactivate app
+
+...
+
+user -> app : semester archive
+activate app
+
+app -> parser : parse(rawInput)
+activate parser
+parser --> app : cmd:ArchiveSemesterCommand
+deactivate parser
+
+app -> cmd : execute(mb, s, ui)
+activate cmd
+
+cmd -> semesterBook : archiveCurrentSemester()
+activate semesterBook
+semesterBook --> cmd
+deactivate semesterBook
+
+cmd -> semesterStorage : save(sb)
+activate semesterStorage
+semesterStorage --> cmd
+deactivate semesterStorage
+
+cmd -> ui : showSemesterArchived(name)
+activate ui
+ui --> cmd
+deactivate ui
+
+cmd --> app
+deactivate cmd
+
+app --> user : "Semester AY2627-S1 is now archived (read-only)."
+deactivate app
+
+...
+
+user -> app : semester switch AY2526-S2
+activate app
+
+app -> parser : parse(rawInput)
+activate parser
+parser --> app : cmd:SwitchSemesterCommand
+deactivate parser
+
+app -> cmd : execute(mb, s, ui)
+activate cmd
+
+cmd -> semesterBook : setCurrentSemester(...)
+activate semesterBook
+semesterBook --> cmd
+deactivate semesterBook
+
+cmd -> semesterStorage : save(sb)
+activate semesterStorage
+semesterStorage --> cmd
+deactivate semesterStorage
+
+cmd -> ui : showSemesterViewChanged(...)
+activate ui
+ui --> cmd
+deactivate ui
+
+cmd --> app
+deactivate cmd
+
+app --> user : "Switched to semester: AY2526-S2 [read-only]"
+deactivate app
+
+@enduml

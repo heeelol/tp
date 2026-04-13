@@ -15,13 +15,14 @@ Participant "tl:TaskList" as taskList
 Participant "t:Todo" as todo
 Participant "s:Storage" as storage
 
+note over app, parser
+  Parser constructs the command via the standard
+  Request Lifecycle (see Design chapter).
+  Diagram begins at command dispatch.
+end note
+
 user -> app : add /mod CS2113 /task "Final Project" /w 25
 activate app
-
-app -> ui : readCommand()
-activate ui
-ui --> app : rawInput:String
-deactivate ui
 
 app -> parser : parse(rawInput)
 activate parser
@@ -34,7 +35,7 @@ note right of parser
 end note
 
 create addCommand
-parser --> addCommand : <<create>>
+parser -> addCommand : AddTodoCommand(...)
 activate addCommand
 deactivate addCommand
 
@@ -44,23 +45,23 @@ deactivate parser
 app -> addCommand : execute(mb, s, ui)
 activate addCommand
 
-addCommand -> moduleBook : getOrCreate("CS2113")
+addCommand -> moduleBook : getOrCreate(...)
 activate moduleBook
 moduleBook --> addCommand : m:Module
 deactivate moduleBook
 
-addCommand -> module : addTodo("Final Project", 25)
+addCommand -> module : addTodo(...)
 activate module
 
-module -> taskList : addTodo("CS2113", "Final Project", 25)
+module -> taskList : addTodo(...)
 activate taskList
 
 create todo
-taskList --> todo : <<create>>
+taskList -> todo : Todo(...)
 activate todo
 deactivate todo
 
-taskList -> todo : setWeightage(25)
+taskList -> todo : setWeightage(...)
 activate todo
 todo --> taskList
 deactivate todo
@@ -78,12 +79,13 @@ deactivate storage
 
 addCommand -> ui : showTaskAdded(m, t, totalCount)
 activate ui
-ui --> user : confirmation with weightage
+ui --> addCommand
 deactivate ui
 
 addCommand --> app
 deactivate addCommand
 
+app --> user : confirmation with weightage
 deactivate app
 
 @enduml

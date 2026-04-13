@@ -72,27 +72,44 @@ Read-only commands (e.g. `stats /mod CS2113`, `list`) skip step 3 entirely and n
 
 ## Implementation
 
+> Each section below describes the design decisions behind a distinct feature area. All commands in
+> this application follow the same Command Pattern established in the Architecture chapter —
+> `Parser` constructs a fully validated command object; `ModuleSync` dispatches it; the command
+> operates on the data model, persists any changes via `Storage`, and reports to `Ui`. Rather than
+> repeating this dispatch flow in every section, each section focuses only on what is architecturally
+> distinctive about that feature. Refer to the Command Architecture diagram and Request Lifecycle
+> description in the Design chapter for the common structural baseline.
+
+---
+
 ### Assigning and Managing Task Weightage
 
 #### Overview
 
-This feature allows students to associate a percentage-based weight with any task, reflecting its contribution to the overall module grade. Weightage is entirely optional — tasks without it are fully functional and display normally.
+This feature allows students to associate a percentage-based weight with any task, reflecting its
+contribution to the overall module grade. Weightage is entirely optional — tasks without it are
+fully functional and display normally.
 
 Two commands implement this feature:
 - `add /mod CODE /task DESCRIPTION [/w PERCENT]` — creates a task with an optional weightage at creation time.
 - `setweight TASK_NUMBER PERCENT` — assigns or updates the weightage of an existing task.
 
-Both commands follow the exact same Command Pattern described in the Architecture section: `Parser` validates input and constructs the command; `ModuleSync` dispatches it; the command mutates the model, saves, and notifies the Ui.
-
 #### Where Weightage Lives in the Data Model
 
-`weightage` is a field on the abstract `Task` class, typed as `Integer` (nullable). This decision has three consequences a future developer must understand:
+`weightage` is a field on the abstract `Task` class, typed as `Integer` (nullable). This decision
+has three consequences a future developer must understand:
 
-- **`null` means unweighted.** There is no separate `boolean isWeighted` flag. `hasWeightage()` is a convenience wrapper for `weightage != null`.
-- **Each task carries its own weight independently.** There is no per-module weight table. This supports heterogeneous weightages (e.g. a 30% exam and a 10% quiz under the same module) without any coupling between tasks.
-- **The sum across a module is not enforced.** A future `v2.1` feature that validates the 100% cap would need to add that logic to `Module` or `Parser` — the `Task` class itself has no such constraint.
+- **`null` means unweighted.** There is no separate `boolean isWeighted` flag. `hasWeightage()` is
+  a convenience wrapper for `weightage != null`.
+- **Each task carries its own weight independently.** There is no per-module weight table. This
+  supports heterogeneous weightages (e.g. a 30% exam and a 10% quiz under the same module) without
+  any coupling between tasks.
+- **The sum across a module is not enforced.** A future feature that validates the 100% cap would
+  need to add that logic to `Module` or `Parser` — the `Task` class itself has no such constraint.
 
-The following object diagram shows the heap state immediately after `add /mod CS2113 /task Final Project /w 25` executes. It uses the full path from `SemesterBook` down to the newly created `Todo` to illustrate how the ownership chain from the architecture section maps to a concrete runtime state:
+The following object diagram shows the heap state immediately after
+`add /mod CS2113 /task Final Project /w 25` executes, illustrating how the ownership chain from
+the architecture maps to a concrete runtime state:
 
 <img src="images/WeightedTaskObjectDiagram.png" alt="Object diagram: heap state after adding a weighted task" />
 
@@ -100,19 +117,28 @@ The following object diagram shows the heap state immediately after `add /mod CS
 
 #### Execution Flow
 
-The following sequence diagram illustrates the interactions when the user executes `add /mod CS2113 /task Final Project /w 25`:
+The following sequence diagram illustrates the interactions when the user executes
+`add /mod CS2113 /task Final Project /w 25`:
 
 <img src="images/AddWeightageSequenceDiagram.png" alt="Sequence diagram for the add weighted task command" />
 
 > Generated from [`docs/diagrams/AddWeightageSequenceDiagram.puml`](diagrams/AddWeightageSequenceDiagram.puml)
 
-The `setweight` command follows the identical architectural path — `Parser` → `SetWeightCommand` → `ModuleBook.getTaskByDisplayIndex()` → `task.setWeightage()` → `Storage.save()` → `Ui.showWeightSet()`. The only structural difference is that it retrieves an existing `Task` by display index rather than creating a new one. A separate sequence diagram for `setweight` would be a verbatim repeat and is therefore omitted.
+The `setweight` command follows the identical path — `Parser` → `SetWeightCommand` →
+`ModuleBook.getTaskByDisplayIndex()` → `task.setWeightage()` → `Storage.save()` →
+`Ui.showWeightSet()`. The only structural difference is that it retrieves an existing `Task` by
+display index rather than creating a new one. A separate sequence diagram for `setweight` would be
+a verbatim repeat and is therefore omitted.
 
 #### Validation and Error Handling
 
-All validation for weightage input is performed in `Parser` before any command object is constructed. This keeps every command constructor free of user-facing validation logic — if an `AddTodoCommand` or `SetWeightCommand` is ever instantiated, its parameters are already guaranteed valid. The `assert` statements in the constructors document these guarantees for future developers.
+All validation for weightage input is performed in `Parser` before any command object is
+constructed. This keeps every command constructor free of user-facing validation logic — if an
+`AddTodoCommand` or `SetWeightCommand` is ever instantiated, its parameters are already guaranteed
+valid. The `assert` statements in the constructors document these guarantees for future developers.
 
-The following activity diagram maps every decision point in the validation flow. It covers both `add /w` and `setweight` since they share the same validation rules:
+The following activity diagram maps every decision point in the validation flow. It covers both
+`add /w` and `setweight` since they share the same validation rules:
 
 <img src="images/WeightageValidationActivityDiagram.png" alt="Activity diagram for weightage input validation" />
 
@@ -122,466 +148,328 @@ The following activity diagram maps every decision point in the validation flow.
 
 **Aspect: Storing weightage as `Integer` (nullable) vs `int` + boolean flag**
 
-* **Alternative 1 (current): `Integer weightage` — null means unweighted.**
+* **Alternative 1 (current choice): `Integer weightage` — null means unweighted.**
     * Pros: Single field, single null-check. No risk of a two-field inconsistency.
-    * Cons: Callers must handle `null`; less immediately obvious than a primitive to developers unfamiliar with the convention.
+    * Cons: Callers must handle `null`; less immediately obvious than a primitive to developers
+      unfamiliar with the convention.
 
 * **Alternative 2: `int weightage` + `boolean isWeighted`.**
     * Pros: Explicit intent; no null handling.
-    * Cons: Two fields that must always be kept consistent. `isWeighted = true, weightage = 0` is technically valid but semantically ambiguous.
-
-We chose `Integer` to keep the model lean and consistent with Java idiom for optional numeric values.
+    * Cons: Two fields that must always be kept consistent. `isWeighted = true, weightage = 0` is
+      technically valid but semantically ambiguous.
 
 **Aspect: Where to validate the 0–100 range**
 
-* **Alternative 1 (current): Validate in `Parser` at parse time.**
-    * Pros: Invalid input is rejected before any object is constructed. Command constructors can use `assert` rather than defensive exception-throwing.
-    * Cons: Validation rules in `Parser` must be kept in sync with the constraints documented on `Task.setWeightage()`.
+* **Alternative 1 (current choice): Validate in `Parser` at parse time.**
+    * Pros: Invalid input is rejected before any object is constructed.
+    * Cons: Validation rules in `Parser` must be kept in sync with the constraints on
+      `Task.setWeightage()`.
 
 * **Alternative 2: Validate inside `Task.setWeightage()`.**
     * Pros: Constraint is co-located with the field it guards.
-    * Cons: `setWeightage` would need to throw a checked exception, which would propagate through the storage loading path — where a silent warning-log-and-skip is more appropriate than a hard failure.
+    * Cons: `setWeightage` would need to throw a checked exception, which would propagate through
+      the storage loading path — where a silent warning-log-and-skip is more appropriate.
 
 **Aspect: Weightage field on `Task` vs. weightage map on `Module`**
 
-* **Alternative 1 (current): Field on `Task`.**
-    * Pros: Each task is self-contained. No coupling between tasks within a module. Trivially serialised per-task in the storage file.
-    * Cons: The 100% cap constraint (if ever added) must be enforced at a higher level.
+* **Alternative 1 (current choice): Field on `Task`.**
+    * Pros: Each task is self-contained. Trivially serialised per-task in the storage file.
+    * Cons: A 100% cap constraint, if ever added, must be enforced at a higher level.
 
 * **Alternative 2: `Map<Task, Integer>` on `Module`.**
     * Pros: Centralises weight management; a 100% cap is easy to enforce.
-    * Cons: Complicates task removal (map entry must be cleaned up). Couples `Module` to task identity in a fragile way that breaks if tasks are ever replaced rather than mutated in-place.
+    * Cons: Complicates task removal and couples `Module` to task identity in a fragile way.
 
 ---
 
-### [Feature] List Upcoming Deadlines (`list /deadlines`)
+### Listing and Filtering Tasks
 
-#### Implementation
+All `list` sub-commands (`list /deadlines`, `list /notdone`, `list /top`) follow the same Command
+Pattern as every other command; the structural collaboration is captured in the Command Architecture
+diagram. This section documents only the design decisions that are specific to each filter.
 
-The List Deadlines feature provides a specialized view that displays only tasks with deadlines,
-grouped by actionability so users can decide what to work on next. The output order is:
-upcoming (future), then due today, then overdue. Within each group, deadlines are sorted
-consistently to keep the view predictable.
+#### Listing Upcoming Deadlines (`list /deadlines`)
 
-The feature implements the following operations:
+`Parser#parseList` detects the `/deadlines` flag and returns a `ListDeadlinesCommand`.
+`Ui#showDeadlineList` collects all `Deadline` objects from the `ModuleBook`, groups them into three
+urgency buckets — overdue, due today, and upcoming — and sorts each bucket chronologically before
+concatenating the final output.
 
-* `Parser#parseList(String)` — Parses the `list` command and checks for optional filters. When
-  `/deadlines` is detected, it returns a `ListDeadlinesCommand` instead of the regular `ListCommand`.
-* `ListDeadlinesCommand#execute(ModuleBook, Storage, Ui)` — Executes the deadline listing by
-  calling `Ui#showDeadlineList()`.
-* `Ui#showDeadlineList(ModuleBook)` — Collects all `Deadline` objects from all modules, groups them
-  into upcoming, due-today, and overdue buckets, then sorts and displays them in a user-friendly format.
+**Design Considerations**
 
-Given below is the workflow for the List Deadlines feature:
+**Aspect: Grouping vs. pure chronological sort**
 
-**Step 1.** The user inputs `list /deadlines`.
+* **Alternative 1 (current choice): Group by urgency bucket (upcoming → due today → overdue).**
+  * Pros: Prevents stale overdue tasks from dominating the top of the list; surfaces near-term
+    work first.
+  * Cons: Slightly more sorting logic than a single comparator.
 
-**Step 2.** `ModuleSync#run()` calls `Ui#readCommand()`, which reads the raw input string from stdin.
-
-**Step 3.** `ModuleSync#run()` passes the raw string to `Parser#parse(...)`. The parser detects the
-`list` keyword and delegates to `Parser#parseList()`.
-
-**Step 4.** `Parser#parseList()` checks if the input contains `/deadlines`. If found, it instantiates
-a `ListDeadlinesCommand` and returns it; otherwise, it returns the regular `ListCommand`.
-
-**Step 5.** `ModuleSync#run()` calls `ListDeadlinesCommand#execute(moduleBook, storage, ui)`.
-
-**Step 6.** `execute()` delegates to `Ui#showDeadlineList(moduleBook)`.
-
-**Step 7.** `showDeadlineList()` iterates through all modules in the `ModuleBook` and collects all
-`Deadline` objects. For each deadline, it records the task number and module code.
-
-**Step 8.** The collected deadlines are bucketed by urgency in this order:
-upcoming (future), due today, then overdue.
-Each bucket is then sorted deterministically before concatenating the final list.
-
-**Step 9.** Finally, the sorted deadlines are displayed to the user, showing module code, status,
-description, due date/time, and days remaining.
-
-#### Design Considerations
-
-**Aspect: Filtering vs. separate command**
-
-* **Alternative 1 (Current choice): Use optional filter syntax `list /deadlines`.**
-    * Pros: Consistent with existing command structure. Can extend with more filters in future
-      (e.g., `list /todos`). Reduces command namespace pollution.
-    * Cons: Slightly more parsing logic in `Parser#parseList()`.
-
-* **Alternative 2: Create a separate command `deadlines` or `view-deadlines`.**
-    * Pros: Simpler parsing; no need to check for filters.
-    * Cons: Increases command count; less extensible for future filters.
-
-We chose the filter approach for consistency and extensibility.
-
-**Aspect: Sorting order for deadlines**
-
-* **Alternative 1 (Current choice): Group by urgency (upcoming, due today, overdue).**
-  * Pros: Keeps actionable deadlines at the top and prevents stale overdue tasks from burying near-term work.
-  * Cons: Slightly more sorting logic than a single chronological comparator.
-
-* **Alternative 2: Sort all deadlines by due date in ascending order.**
+* **Alternative 2: Sort all deadlines strictly by due date ascending.**
   * Pros: Minimal implementation complexity.
-  * Cons: Very old overdue tasks can dominate the top of the list and reduce planning usefulness.
+  * Cons: Very old overdue tasks can bury near-term upcoming work.
 
-We chose urgency grouping because it better matches how users prioritize work in semester planning.
+#### Listing Incomplete Tasks by Module (`list /notdone /mod MOD`)
 
+`Parser#parseList` detects both `/notdone` and `/mod` flags together and returns a
+`ListNotDoneCommand`. `Ui#showNotDoneTaskList` traverses all modules but prints only incomplete
+tasks belonging to the target module, preserving the **global display indices** shown by `list`.
+This allows the user to immediately follow up with `mark`, `unmark`, or `delete` using the indices
+they see.
 
-### [Feature] List Not Done Tasks by Module (`list /notdone /mod MOD`)
+The parser requires both flags together — `list /notdone` without a module code is rejected, as
+is `list /notdone /mod` without a value.
 
-#### Implementation
-
-The List Not Done Tasks by Module feature provides a focused view of only the unfinished tasks for a specific module.
-This reduces noise when a module has many completed tasks and makes it faster to find remaining work.
-
-This feature extends the existing `list` command using a filter syntax.
-It is implemented using the following operations:
-
-* `Parser#parseList(String)` — Detects the presence of the `/notdone` and `/mod` flags and creates a `ListNotDoneCommand`.
-* `ListNotDoneCommand#execute(ModuleBook, Storage, Ui)` — Delegates the display logic to the UI layer.
-* `Ui#showNotDoneTaskList(ModuleBook, String)` — Filters tasks for the target module and prints only tasks that are not done.
-
-An important design decision is that the not-done list keeps the same **global display indices** used by the main `list` command.
-This ensures the user can follow up with commands such as `delete`, `mark`, and `unmark` using the index they see.
-
-##### Parsing rules
-
-The parser requires the not-done filter to be used together with a module code:
-
-* Accepted forms: `list /notdone /mod CS2113` or `list /mod CS2113 /notdone`
-* Rejected forms: `list /notdone` (missing module), `list /notdone /mod` (missing module code)
-
-At the time of writing, the parser accepts this filter only when the `list` remainder has exactly three
-whitespace-delimited tokens.
-
-#### Sequence Diagram
-
-The following sequence diagram illustrates the interactions when the user executes `list /notdone /mod CS2113`:
-
-<img src="images/ListNotDoneSequenceDiagram.png" alt="Sequence diagram for list /notdone /mod" />
-
-> **Note:** The diagram above must be generated from
-> [`docs/diagrams/ListNotDoneSequenceDiagram.puml`](diagrams/ListNotDoneSequenceDiagram.puml)
-> and saved as `docs/images/ListNotDoneSequenceDiagram.png`.
-
-#### Class Diagram
-
-The following class diagram shows the main classes involved in listing not-done tasks and how they collaborate:
-
-<img src="images/ListNotDoneClassDiagram.png" alt="Class diagram for list /notdone /mod" />
-
-> **Note:** The diagram above must be generated from
-> [`docs/diagrams/ListNotDoneClassDiagram.puml`](diagrams/ListNotDoneClassDiagram.puml)
-> and saved as `docs/images/ListNotDoneClassDiagram.png`.
-
-#### Design Considerations
+**Design Considerations**
 
 **Aspect: Where to implement the not-done filtering**
 
-* **Alternative 1 (Current choice): Filter in `Ui#showNotDoneTaskList(...)`.**
-  * Pros: Minimal changes to model classes; view-only feature that does not affect persistence.
-  * Cons: UI becomes responsible for traversal/filtering logic; less reusable for other commands.
+* **Alternative 1 (current choice): Filter in `Ui#showNotDoneTaskList`.**
+  * Pros: View-only feature; no changes to model classes or persistence.
+  * Cons: Traversal and filtering logic resides in the UI layer.
 
-* Alternative 2: Filter in `ModuleBook`/`TaskList` and return a structured result.
-  * Pros: Easier to reuse in future commands (e.g., `delete /notdone ...`).
-  * Cons: Requires deciding how to preserve global indices, or introducing a new indexing scheme.
+* **Alternative 2: Filter in `ModuleBook` or `TaskList`, returning a structured result.**
+  * Pros: More reusable across future commands.
+  * Cons: Requires a strategy for preserving global indices in the filtered result.
 
-**Aspect: Indexing strategy for the not-done view**
+**Aspect: Index preservation vs. renumbering**
 
-* **Alternative 1 (Current choice): Preserve the global indices from `list`.**
-  * Pros: Allows direct follow-up using `delete`, `mark`, and `unmark`.
-  * Cons: Indices can appear sparse in a filtered view.
+* **Alternative 1 (current choice): Preserve global indices from `list`.**
+  * Pros: Users can chain follow-up commands without re-running `list`.
+  * Cons: Indices appear sparse in a filtered view.
 
-* Alternative 2: Renumber not-done tasks starting from 1.
+* **Alternative 2: Renumber from 1.**
   * Pros: The filtered list looks compact.
-  * Cons: Would require separate commands or extra identifiers to refer to the original task.
+  * Cons: Requires separate identifiers or an extra `list` run before any follow-up command.
 
+#### Deleting a Task (`delete TASK_NUMBER`)
 
-### [Feature] Delete Task (`delete TASK_NUMBER`)
+`Parser#parseDelete` extracts the 1-based display index and returns a `DeleteCommand`.
+`DeleteCommand#execute` calls `ModuleBook#removeTaskByDisplayIndex`, which performs a global scan
+across all modules to convert the display index to a per-module position and removes the task.
+The updated `ModuleBook` is then persisted via `Storage#save`.
 
-#### Implementation
-
-The Delete Task feature removes a task from the application using the **1-based display index** shown by `list`.
-After deletion, the change is persisted to disk and the UI confirms the removal.
-
-The feature is implemented using the following operations:
-
-* `Parser#parseDelete(String)` — Parses the user-supplied index and creates a `DeleteCommand`.
-* `DeleteCommand#execute(ModuleBook, Storage, Ui)` — Removes the task, saves data, and prints a confirmation.
-* `ModuleBook#removeTaskByDisplayIndex(int)` — Locates the task in global order across modules and removes it.
-* `Storage#save(ModuleBook)` — Persists the updated `ModuleBook`.
-
-Internally, the removal uses a global scan to convert a display index to a per-module index.
-This keeps the CLI simple: the user only needs the number shown by `list`.
-
-#### Sequence Diagram
-
-The following sequence diagram illustrates the interactions when the user executes `delete 3`:
+The sequence diagram below illustrates these interactions:
 
 <img src="images/DeleteTaskSequenceDiagram.png" alt="Sequence diagram for the delete command" />
 
-> **Note:** The diagram above must be generated from
-> [`docs/diagrams/DeleteTaskSequenceDiagram.puml`](diagrams/DeleteTaskSequenceDiagram.puml)
-> and saved as `docs/images/DeleteTaskSequenceDiagram.png`.
+> Generated from [`docs/diagrams/DeleteTaskSequenceDiagram.puml`](diagrams/DeleteTaskSequenceDiagram.puml)
 
-#### Class Diagram
+**Design Considerations**
 
-The following class diagram shows the main classes involved in deletion and how they collaborate:
+**Aspect: Global index vs. module-scoped index**
 
-<img src="images/DeleteTaskClassDiagram.png" alt="Class diagram for the delete command" />
+* **Alternative 1 (current choice): Use the global display index shown by `list`.**
+  * Pros: Consistent with `mark` and `unmark`; single parameter for the user.
+  * Cons: Index depends on the current global ordering across all modules.
 
-> **Note:** The diagram above must be generated from
-> [`docs/diagrams/DeleteTaskClassDiagram.puml`](diagrams/DeleteTaskClassDiagram.puml)
-> and saved as `docs/images/DeleteTaskClassDiagram.png`.
+* **Alternative 2: Module-scoped index (e.g. `delete /mod CS2113 2`).**
+  * Pros: Stable within a module.
+  * Cons: Requires the user to supply both a module code and an index.
 
-#### Design Considerations
+**Aspect: Where to validate the index**
 
-**Aspect: Which index should `delete` use**
-
-* **Alternative 1 (Current choice): Use the global display index shown by `list`.**
-  * Pros: Easy to learn and consistent with `mark`/`unmark`.
-  * Cons: Index depends on the current global ordering across modules.
-
-* Alternative 2: Use a module-scoped index, e.g., `delete /mod CS2113 2`.
-  * Pros: Indices remain stable within a module.
-  * Cons: More complex CLI; user must provide both module and index.
-
-**Aspect: Where to validate indices**
-
-* **Alternative 1 (Current choice): Parse integer in `Parser`, validate existence in `ModuleBook`.**
-  * Pros: Separation of concerns; model owns "does this task exist?".
+* **Alternative 1 (current choice): Parse the integer in `Parser`; validate existence in `ModuleBook`.**
+  * Pros: Clean separation — syntax validation in `Parser`, semantic validation in the model.
   * Cons: Error messages may originate from different layers.
 
-* Alternative 2: Validate everything inside `DeleteCommand#execute()`.
+* **Alternative 2: Validate entirely inside `DeleteCommand#execute`.**
   * Pros: Delete-related logic concentrated in one place.
-  * Cons: Commands start duplicating model checks.
+  * Cons: Commands begin duplicating model-level checks.
 
+---
 
-### [Feature] List Registered Modules (`module list`)
+### Viewing Module and Semester Statistics
 
-#### Implementation
+Both the per-module `stats /mod` command and the semester-wide `semester stats` command are
+view-only: they iterate over the `ModuleBook`, aggregate counts and percentages from in-memory
+data, and print the result. Neither persists anything to disk.
 
-The List Registered Modules feature provides a quick overview of which modules the user is currently tracking.
-In ModuleSync, modules are represented implicitly: a module exists once at least one task has been added under it.
-
-This feature is implemented using the following operations:
-
-* `Parser#parse(String)` — Recognises `module list` and creates a `ListModulesCommand`.
-* `ListModulesCommand#execute(ModuleBook, Storage, Ui)` — Delegates display logic to the UI.
-* `Ui#showModuleList(ModuleBook)` — Iterates the `ModuleBook` and prints each module code with its task count.
-
-This command is view-only and does not modify any stored data.
-
-#### Sequence Diagram
-
-The following sequence diagram illustrates the interactions when the user executes `module list`:
-
-<img src="images/ListModulesSequenceDiagram.png" alt="Sequence diagram for the module list command" />
-
-> **Note:** The diagram above must be generated from
-> [`docs/diagrams/ListModulesSequenceDiagram.puml`](diagrams/ListModulesSequenceDiagram.puml)
-> and saved as `docs/images/ListModulesSequenceDiagram.png`.
-
-#### Class Diagram
-
-The following class diagram shows the main classes involved in listing modules and how they collaborate:
-
-<img src="images/ListModulesClassDiagram.png" alt="Class diagram for the module list command" />
-
-> **Note:** The diagram above must be generated from
-> [`docs/diagrams/ListModulesClassDiagram.puml`](diagrams/ListModulesClassDiagram.puml)
-> and saved as `docs/images/ListModulesClassDiagram.png`.
-
-#### Design Considerations
-
-**Aspect: What is considered a "registered module"**
-
-* **Alternative 1 (Current choice): Modules are created lazily when tasks are added.**
-  * Pros: No separate "register module" workflow; data model stays simple.
-  * Cons: A module cannot exist without at least one task.
-
-* Alternative 2: Introduce explicit module registration (e.g., `addmodule CS2113`).
-  * Pros: Allows empty modules.
-  * Cons: Adds a new command and persistence requirements for modules without tasks.
-
-
-### [Feature] Viewing Semester Statistics (`semester stats`)
-
-#### Implementation
-
-The Semester Statistics feature provides a semester-wide summary across all tracked modules so that the user can
-evaluate overall progress and workload distribution.
-
-The current implementation treats the set of modules currently stored in the `ModuleBook` as the current semester.
-Statistics are computed on-demand from in-memory data.
-
-This feature is implemented using the following operations:
-
-* `Parser#parse(String)` — Recognises `semester stats` and creates a `SemesterStatsCommand`.
-* `SemesterStatsCommand#execute(ModuleBook, Storage, Ui)` — Delegates the computation and display to the UI.
-* `Ui#showSemesterStatistics(ModuleBook)` — Aggregates per-task and per-module counts:
-  total tasks, done tasks, task type counts (todo vs deadline), and optional weightage-based completion.
-
-This command is view-only and does not modify any stored data.
-
-#### Sequence Diagram
-
-The following sequence diagram illustrates the interactions when the user executes `semester stats`:
+The structural collaboration for `semester stats` — including the nested loops over `Module`,
+`TaskList`, and `Task` — is shown in the sequence diagram below:
 
 <img src="images/SemesterStatsSequenceDiagram.png" alt="Sequence diagram for the semester stats command" />
 
-> **Note:** The diagram above must be generated from
-> [`docs/diagrams/SemesterStatsSequenceDiagram.puml`](diagrams/SemesterStatsSequenceDiagram.puml)
-> and saved as `docs/images/SemesterStatsSequenceDiagram.png`.
+> Generated from [`docs/diagrams/SemesterStatsSequenceDiagram.puml`](diagrams/SemesterStatsSequenceDiagram.puml)
 
-#### Class Diagram
-
-The following class diagram shows the main classes involved in computing semester statistics:
-
-<img src="images/SemesterStatsClassDiagram.png" alt="Class diagram for the semester stats command" />
-
-> **Note:** The diagram above must be generated from
-> [`docs/diagrams/SemesterStatsClassDiagram.puml`](diagrams/SemesterStatsClassDiagram.puml)
-> and saved as `docs/images/SemesterStatsClassDiagram.png`.
-
-#### Design Considerations
+**Design Considerations**
 
 **Aspect: Where to compute statistics**
 
-* **Alternative 1 (Current choice): Compute in `Ui#showSemesterStatistics(...)`.**
-  * Pros: Feature remains view-only; minimal model changes.
-  * Cons: Aggregation logic lives in UI and is less reusable for future commands.
+* **Alternative 1 (current choice): Compute inside `Ui#showSemesterStatistics`.**
+  * Pros: Feature remains view-only; no changes to model classes.
+  * Cons: Aggregation logic lives in the UI layer and is less reusable.
 
-* Alternative 2: Compute in a dedicated statistics model/service (e.g., `SemesterStats` class).
-  * Pros: Cleaner separation and easier to test/extend.
-  * Cons: Adds extra classes/indirection for a small feature.
+* **Alternative 2: Compute in a dedicated service class (e.g. `SemesterStats`).**
+  * Pros: Easier to unit-test and extend.
+  * Cons: Adds an extra class for a relatively small computation.
 
 **Aspect: Weightage-based completion**
 
-* **Alternative 1 (Current choice): Treat weightage as optional and compute completion only when present.**
-  * Pros: Works for both weighted and unweighted tasks.
-  * Cons: The weightage completion metric may be absent until the user assigns weightage.
+* **Alternative 1 (current choice): Treat weightage as optional; compute the weighted metric only
+  when at least one task in the semester has a weightage assigned.**
+  * Pros: Works correctly for both weighted and unweighted task sets.
+  * Cons: The weighted completion line is absent until the user starts assigning weightage.
 
-//@@codefuul
+---
 
-### [Feature] CAP Calculator (`cap`)
+### Calculating CAP (`cap` and `setcredits`)
 
-#### Implementation
+`CapCommand` iterates over the `ModuleBook`, maps each module's letter grade to its grade point on
+the NUS 5.0 scale, and computes a weighted average using the module's stored MCs. Modules that are
+ungraded, or that carry non-CAP-bearing grades (`CS`, `CU`, `S`, `U`), are excluded from the
+calculation. Zero-credit modules are also excluded to avoid division-by-zero artefacts.
 
-The CAP Calculator feature iterates through the `ModuleBook` to gather grades for all tracked modules. It maps the assigned letter grades (e.g., A+, B, C) to the standard 5.0 scale. To do this accurately, the `CapCommand` includes specific logic to filter out and ignore modules that are marked as CS (Completed Satisfactory) or CU (Completed Unsatisfactory), as well as any modules that are currently ungraded. It calculates both the semester CAP based on the current modules and the cumulative CAP.
+`setcredits` enforces an MC range of 0–40 per module, matching standard NUS module credit values.
+If the total credits across all modules in the current semester exceed 32, `Ui#showHighSemesterCreditsWarning`
+is triggered to alert the user to an unusually heavy workload.
 
-#### Sequence Diagram
+**Design Considerations**
 
-The following sequence diagram illustrates the interactions when the user executes `cap`:
+**Aspect: On-the-fly calculation vs. caching**
 
-<img src="images/CapSequenceDiagram.png" alt="Sequence diagram for the cap command" />
+* **Alternative 1 (current choice): Compute CAP on-the-fly during `CapCommand#execute`.**
+  * Pros: Always reflects the latest grades and credits; no risk of a stale cached value.
+  * Cons: Iterates the module list on every invocation.
 
-> **Note:** The diagram above must be generated from
-> [`docs/diagrams/CapSequenceDiagram.puml`](diagrams/CapSequenceDiagram.puml)
-> and saved as `docs/images/CapSequenceDiagram.png`.
+* **Alternative 2: Cache CAP inside `ModuleBook`.**
+  * Pros: O(1) retrieval for subsequent calls.
+  * Cons: The cache must be invalidated on every grade or credit change — a fragile invariant to
+    maintain across multiple command types.
 
-#### Design Considerations
+---
 
-**Aspect: How to compute the CAP value**
+### Checking Deadline Conflicts and Urgency
 
-* **Alternative 1 (Current choice): Calculate CAP on-the-fly during command execution.**
-  * Pros: No storage overhead, and the calculated CAP is always strictly accurate based on the current state.
-  * Cons: Slightly more computation needed at runtime when the command is called.
+Two commands surface deadline-proximity information without modifying any data:
 
-* **Alternative 2: Cache the CAP in a variable inside the `ModuleBook`.**
-  * Pros: Faster retrieval for subsequent calls.
-  * Cons: Requires complex state synchronization whenever a grade is added, modified, or removed, which could lead to bugs if the state goes out of sync.
+* `check /conflicts` — groups all `Deadline` tasks by calendar date and reports any date on which
+  two or more deadlines fall simultaneously.
+* `check /urgent` — filters for incomplete `Deadline` tasks whose due date falls within 48 hours of
+  the current system time (`LocalDateTime.now()`), then sorts the results by proximity so the most
+  imminent task appears first.
 
+Both commands operate entirely on in-memory data and follow the standard Command Pattern.
 
-### [Feature] Urgent Tasks Filter (`check /urgent`)
+**Design Considerations for `check /urgent`**
 
-#### Implementation
+**Aspect: Static 48-hour window vs. dynamic background tagging**
 
-The Urgent Tasks Filter iterates through the task list to identify tasks that need immediate attention. The `CheckUrgentCommand` utilizes Java's `LocalDateTime` to assess deadlines. It first filters out any completed tasks so that only pending work is evaluated. It then identifies incomplete tasks whose deadlines fall strictly within the next 48 hours relative to the current system time. Finally, these filtered tasks undergo a dynamic sort by urgency, ensuring that the tasks due the soonest are displayed first.
+* **Alternative 1 (current choice): Evaluate the window dynamically at command execution time.**
+  * Pros: Stateless; always uses the accurate current time; no threading complexity.
+  * Cons: Requires iterating the task list on each invocation.
 
-#### Sequence Diagram
+* **Alternative 2: A background thread that continuously tags tasks as urgent.**
+  * Pros: The UI could surface urgent tasks passively, without a dedicated command.
+  * Cons: Introduces multi-threading into a single-user CLI application — significant complexity
+    for negligible practical benefit.
 
-The following sequence diagram illustrates the interactions when the user executes `check /urgent`:
+---
 
-<img src="images/CheckUrgentSequenceDiagram.png" alt="Sequence diagram for the check /urgent command" />
+### Applying Defensive Programming and Logging
 
-> **Note:** The diagram above must be generated from
-> [`docs/diagrams/CheckUrgentSequenceDiagram.puml`](diagrams/CheckUrgentSequenceDiagram.puml)
-> and saved as `docs/images/CheckUrgentSequenceDiagram.png`.
+`assert` statements are placed throughout command constructors and critical model operations (e.g.
+`DeleteCommand`, `ModuleBook#removeTaskByDisplayIndex`) to document preconditions and invariants.
+These assertions are enabled at runtime during development and testing via the Gradle configuration.
 
-#### Design Considerations
+All application-level log records are written exclusively to `modulesync.log` using
+`java.util.logging.FileHandler`. The JUL root logger's default `ConsoleHandler` is removed at
+startup in `ModuleSync#configureLogging()` so that no log output ever appears in the user's
+terminal.
 
-**Aspect: When to evaluate the 48-hour urgency window**
+**Design Considerations**
 
-* **Alternative 1 (Current choice): Evaluate the 48-hour window dynamically at execution time.**
-  * Pros: Simple application state, reliable, and uses up-to-date system time exactly when requested.
-  * Cons: Has to iterate over the task list at execution time.
+**Aspect: Log destination**
 
-* **Alternative 2: Run a background thread that constantly tags tasks as 'urgent'.**
-  * Pros: The UI could immediately highlight urgent tasks without a dedicated command execution.
-  * Cons: Significant overhead and complexity introduced by multi-threading. It is overkill for a simple CLI task tracker.
+* **Alternative 1 (current choice): Write to `modulesync.log` via `FileHandler`.**
+  * Pros: Keeps the terminal output clean; diagnostic records are still available for
+    post-hoc investigation.
+  * Cons: Developers must open the log file separately to inspect records.
 
+* **Alternative 2: Log to `stderr` (the JUL default).**
+  * Pros: Records are immediately visible during development.
+  * Cons: Log records pollute the user-facing terminal, which is unacceptable for a CLI product.
 
-### [Feature] System Logging & Defensive Assertions
+---
 
-#### Implementation
+### Managing Module Lifecycles (`add /mod` and `delete module /mod`)
 
-The application integrates `java.util.logging.Logger` combined with a `FileHandler` to silently write execution flows and caught exceptions to a background `modulesync.log` file. This ensures that debugging details are captured without polluting the CLI UI directly.
+A `Module` in ModuleSync is created lazily: the first `add /mod MOD /task ...` command for a
+previously unseen module code calls `ModuleBook#getOrCreate(code)`, which inserts a new `Module`
+entry if one does not already exist. This means no explicit "register module" step is required.
+Duplicate codes are silently deduped by the `LinkedHashMap` backing `ModuleBook`.
 
-Furthermore, Java `assert` statements have been added in critical areas, such as the `DeleteCommand`, to enforce internal invariants and assumptions before executing destructive actions. This defensive programming approach prevents unintended corruption of the `ModuleBook` or application state.
+`delete module /mod MOD` calls `ModuleBook#deleteModule(code)`, which removes the `Module` and all
+its tasks from the map. The deletion is persisted immediately via `Storage#save`.
 
-#### Sequence Diagram
+**Design Considerations**
 
-The following sequence diagram illustrates the interactions involved when the system invokes defensive assertions and logging:
+**Aspect: Lazy creation vs. explicit registration**
 
-<img src="images/LoggingSequenceDiagram.png" alt="Sequence diagram for system logging and defensive assertions" />
+* **Alternative 1 (current choice): Create modules implicitly on first `add`.**
+  * Pros: No additional command or workflow step; consistent with how the CLI is naturally used.
+  * Cons: An empty module cannot exist — a module only appears after its first task is added.
 
-> **Note:** The diagram above must be generated from
-> [`docs/diagrams/LoggingSequenceDiagram.puml`](diagrams/LoggingSequenceDiagram.puml)
-> and saved as `docs/images/LoggingSequenceDiagram.png`.
+* **Alternative 2: Explicit `module add MOD` command.**
+  * Pros: Allows empty modules; makes module existence an explicit user action.
+  * Cons: Adds a required step before any task can be added, increasing friction.
 
-#### Design Considerations
+---
 
-**Aspect: Destination for system logs**
+### Managing the Semester Lifecycle
 
-* **Alternative 1 (Current choice): Log to a background file (`modulesync.log`).**
-  * Pros: Maintains a clean, distraction-free user experience in the terminal while preserving diagnostic data for troubleshooting.
-  * Cons: Requires developers to check an external file to view logs.
+The semester lifecycle encompasses four operations, each handled by a dedicated
+`SemesterCommand` subclass:
 
-* **Alternative 2: Log directly to the console/UI.**
-  * Pros: Easier to implement, immediately visible during development.
-  * Cons: Ruins the clean user experience by cluttering the terminal output with internal operational details.
+| Command | Class | `SemesterBook` method |
+|---|---|---|
+| `semester new NAME` | `NewSemesterCommand` | `switchOrCreate(name)` |
+| `semester switch NAME` | `SwitchSemesterCommand` | `setCurrentSemester(name)` |
+| `semester archive` | `ArchiveSemesterCommand` | `archiveCurrentSemester()` |
+| `semester unarchive` | `UnarchiveSemesterCommand` | `unarchiveCurrentSemester()` |
 
-### [Feature] Explicit Module Lifecycles (`add /mod` & `delete module /mod`)
+All four commands extend `SemesterCommand` rather than `Command` directly. `SemesterCommand`
+overrides `isMutating()` to return `false`, which causes `ModuleSync#run()` to bypass the
+read-only guard entirely. This is intentional: semester-lifecycle operations must be executable
+regardless of the archived state of the current semester (e.g. a user must be able to
+`semester archive` their semester, or `semester switch` away from it, even when it is already
+read-only).
 
-#### Implementation
+After each lifecycle change, the command calls `SemesterStorage#save(semesterBook)`, which
+rewrites every semester's `.txt` file and updates `data/current.txt` to point at the new active
+semester.
 
-To safely facilitate the configuration of workload modules prior to assigning any explicit task deadlines or grades, the `ModuleBook` array is bound natively to `add /mod [MOD]` to implicitly drop an orphaned module string footprint into the tracker. It safely checks the existing arrays and uses `getOrCreate` to guarantee zero duplication conflicts. When `delete module /mod [MOD]` is called, the `deleteModule(String)` utility natively queries the linked Hash Map and severs the memory mapping entirely.
+The following sequence diagram illustrates the three most common lifecycle transitions —
+creation, archiving, and switching — in a single run:
 
-#### Design Considerations
+<img src="images/SemesterLifecycleSequenceDiagram.png" alt="Sequence diagram for semester lifecycle commands" />
 
-**Aspect: How to parse the add command gracefully without task constraints?**
+> Generated from [`docs/diagrams/SemesterLifecycleSequenceDiagram.puml`](diagrams/SemesterLifecycleSequenceDiagram.puml)
 
-* **Alternative 1 (Current choice): Dynamically detect task bounds through Parser constraints.**
-  * Pros: Reuses the existing `CMD_ADD` array loop syntax perfectly without creating overlapping duplicate commands. 
-  * Cons: Adds a layer of complexity inside `parseAdd()`.
+**Design Considerations**
 
-* **Alternative 2: Add a separate `moduleadd` command.**
-  * Pros: Easier to parse.
-  * Cons: Inconvenient to the end user who prefers standard UI verbs.
+**Aspect: Why `SemesterCommand` bypasses the read-only guard**
 
-### [Feature] CAP Calculation Bounds Engine (`setcredits`)
+* **Alternative 1 (current choice): `SemesterCommand#isMutating()` always returns `false`.**
+  * Pros: Semester-lifecycle commands can always execute; the user is never locked out of
+    managing semesters even in an archived context.
+  * Cons: A developer must understand that `isMutating() == false` does not mean the command is
+    side-effect free for `SemesterCommand` subclasses — it only means the guard is bypassed.
 
-#### Implementation
+* **Alternative 2: Introduce a separate `bypassesGuard()` method.**
+  * Pros: Makes the bypass intent explicit and distinct from the "truly read-only" case.
+  * Cons: Adds API surface to the `Command` hierarchy for a narrow use case.
 
-The `setcredits` bounding limit enforces absolute `0` to `40` Credit (MC) limits on a single module string, matching standard University models. Upon entering `0`, the logic natively circumvents `CapCommand` computational limits, officially recognizing it as a neutral module and ignoring it during CAP multiplication arrays. Finally, if the tracker detects `> 32` combined credits during a semester scope tracking execution, it natively fires a `Ui` warning flag through `showHighSemesterCreditsWarning`.
+**Aspect: `semester new` dual behaviour (create or switch)**
 
-#### Design Considerations
+* **Alternative 1 (current choice): `semester new` creates a semester if it does not exist, or
+  switches to it silently if it does.**
+  * Pros: Idempotent; users can re-issue the command without error.
+  * Cons: The command name implies creation, which may be surprising when it silently switches.
 
-**Aspect: How to calculate 0-Credit Modules?**
-
-* **Alternative 1 (Current choice): Nullify multiplication outputs during `CapCommand` scans without crashing the tracker.**
-  * Pros: Accurately renders non-credit classes explicitly.
-  * Cons: Adds bounding filters internally.
+* **Alternative 2: Separate `semester new` and `semester switch` strictly — `semester new`
+  fails if the semester already exists.**
+  * Pros: Clearer intent mapping.
+  * Cons: Forces users to remember which semester names already exist before using the command.
 
 ---
 

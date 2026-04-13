@@ -23,6 +23,9 @@ package "ModuleSync Application" {
     component "ModuleSync\n(Main Loop)" as MAIN {
     }
 
+    component "Command\n(abstract)" as CMD {
+    }
+
     package "Data Model" {
         component "SemesterBook" as SB
         component "Semester" as SEM
@@ -36,15 +39,13 @@ package "ModuleSync Application" {
         component "Storage" as ST
     }
 
-    component "Command\n(abstract)" as CMD {
-    }
-
 }
 
 User -down-> UI : stdin / stdout
 
-UI -down-> PARSER : raw String
-PARSER -down-> MAIN : Command object
+MAIN -up-> UI : readCommand()
+MAIN -right-> PARSER : parse(input)
+PARSER -left-> MAIN : Command object
 MAIN -down-> CMD : dispatches
 
 CMD -right-> MB : reads / mutates

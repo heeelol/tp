@@ -3,23 +3,23 @@
 skinparam sequenceArrowThickness 2
 skinparam roundcorner 5
 skinparam maxmessagesize 60
-skinparam sequenceParticipant underline
 
 Actor User as user
-Participant "ModuleSync" as app
-Participant "Ui" as ui
-Participant "Parser" as parser
-Participant "ListNotDoneCommand" as cmd
-Participant "ModuleBook" as moduleBook
-Participant "Task" as task
+Participant "app:ModuleSync" as app
+Participant "parser:Parser" as parser
+Participant "cmd:ListNotDoneCommand" as cmd
+Participant "ui:Ui" as ui
+Participant "mb:ModuleBook" as moduleBook
+Participant "t:Task" as task
 
-user -> app : enter "list /notdone /mod CS2113"
+note over app, parser
+  Request Lifecycle (parse → dispatch) is
+  described in the Design chapter.
+  Diagram begins at command dispatch.
+end note
+
+user -> app : list /notdone /mod CS2113
 activate app
-
-app -> ui : readCommand()
-activate ui
-ui --> app : rawInput
-deactivate ui
 
 app -> parser : parse(rawInput)
 activate parser
@@ -30,31 +30,38 @@ note right of parser
 end note
 
 create cmd
-parser -> cmd : new ListNotDoneCommand("CS2113")
-parser --> app : cmd
+parser -> cmd : ListNotDoneCommand("CS2113")
+activate cmd
+deactivate cmd
+
+parser --> app : cmd:ListNotDoneCommand
 deactivate parser
 
-app -> cmd : execute(moduleBook, storage, ui)
+app -> cmd : execute(mb, s, ui)
 activate cmd
 
-cmd -> ui : showNotDoneTaskList(moduleBook, "CS2113")
+cmd -> ui : showNotDoneTaskList(mb, "CS2113")
 activate ui
+
 ui -> moduleBook : getModules()
 activate moduleBook
-moduleBook --> ui : modules
+moduleBook --> ui : modules:Collection<Module>
 deactivate moduleBook
 
 loop for each task across all modules
   ui -> task : isDone()
-  task --> ui : boolean
+  activate task
+  task --> ui : done:boolean
+  deactivate task
 end
 
-ui --> user : prints only not-done tasks\n(using global list indices)
+ui --> cmd
 deactivate ui
 
 cmd --> app
 deactivate cmd
 
+app --> user : not-done tasks (global indices preserved)
 deactivate app
 
 @enduml
