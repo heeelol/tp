@@ -572,14 +572,14 @@ public class Parser {
     }
 
     /**
-     * Builds an {@link AddDeadlineCommand} by parsing the due date string.
+     * Builds an {@link AddDeadlineCommand} by parsing the due date string and validating it.
      *
      * @param module    the module code
      * @param task      the task description
      * @param due       the raw due date string
      * @param weightage the optional weightage (0–100), or null
      * @return a new {@link AddDeadlineCommand}
-     * @throws ModuleSyncException if the due date string cannot be parsed
+     * @throws ModuleSyncException if the due date string cannot be parsed or is in the past
      */
     private Command buildAddDeadlineCommand(String module, String task, String due,
             Integer weightage) throws ModuleSyncException {
@@ -587,6 +587,13 @@ public class Parser {
             LocalDateTime byDate = parseDateTime(due);
             assert byDate != null : "Parsed deadline must not be null";
             assert module != null && task != null : "Add deadline command requires parsed module and task";
+            
+            // Validate that the deadline is not in the past
+            LocalDateTime now = LocalDateTime.now();
+            if (byDate.isBefore(now)) {
+                throw new ModuleSyncException("Error: Deadline cannot be in the past. Please enter a future date.");
+            }
+            
             return new AddDeadlineCommand(module, task, byDate, weightage);
         } catch (DateTimeParseException e) {
             throw new ModuleSyncException("Invalid date format. Use yyyy-MM-dd or yyyy-MM-dd-HHmm");
