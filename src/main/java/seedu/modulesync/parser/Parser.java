@@ -1136,6 +1136,7 @@ public class Parser {
      * Parses a "module" command and returns the appropriate module-level command.
      * Supports:
      * - {@code module list}
+    * - {@code module delete /mod MODULECODE}
      * - {@code module archive /mod MODULECODE}
      * - {@code module unarchive /mod MODULECODE}
      *
@@ -1148,7 +1149,7 @@ public class Parser {
 
         if (remainder.isEmpty()) {
             throw new ModuleSyncException(
-                    "Usage: module list | module archive /mod MODULECODE | "
+                "Usage: module list | module delete /mod MODULECODE | module archive /mod MODULECODE | "
                             + "module unarchive /mod MODULECODE");
         }
 
@@ -1162,13 +1163,53 @@ public class Parser {
             }
             return new ListModulesCommand();
         }
+        if (subcommand.equals(CMD_DELETE)) {
+            return parseModuleDelete(args);
+        }
         if (subcommand.equals(PREFIX_ARCHIVE)) {
             return parseModuleArchive(args);
         } else if (subcommand.equals(PREFIX_UNARCHIVE)) {
             return parseModuleUnarchive(args);
         }
 
-        throw new ModuleSyncException("Unknown module command. Try: module list or module archive /mod MODULECODE");
+        throw new ModuleSyncException(
+                "Unknown module command. Try: module list, module delete /mod MODULECODE, "
+                        + "module archive /mod MODULECODE, or module unarchive /mod MODULECODE");
+    }
+
+    /**
+     * Parses the module delete subcommand.
+     *
+     * @param args the arguments after the "delete" keyword
+     * @return a {@link DeleteModuleCommand}
+     * @throws ModuleSyncException if the module code is missing or malformed
+     */
+    private Command parseModuleDelete(String args) throws ModuleSyncException {
+        if (args.isEmpty()) {
+            throw new ModuleSyncException("Usage: module delete /mod MODULECODE");
+        }
+
+        String[] tokens = args.split("/");
+        String moduleCode = null;
+        for (String token : tokens) {
+            String trimmed = token.trim();
+            if (trimmed.isEmpty()) {
+                continue;
+            }
+            if (trimmed.toLowerCase().startsWith("mod")) {
+                if (trimmed.length() > 3) {
+                    moduleCode = trimmed.substring(3).trim();
+                }
+                break;
+            }
+        }
+
+        if (moduleCode == null || moduleCode.isEmpty()) {
+            throw new ModuleSyncException("Usage: module delete /mod MODULECODE");
+        }
+        validateModuleCode(moduleCode);
+
+        return new DeleteModuleCommand(moduleCode);
     }
 
     /**

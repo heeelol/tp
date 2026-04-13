@@ -55,4 +55,30 @@ public class DeleteCommandTest {
         DeleteCommand command = new DeleteCommand(5);
         assertThrows(ModuleSyncException.class, () -> command.execute(moduleBook, stubStorage, stubUi));
     }
+
+    @Test
+    void execute_deletingLastTaskInMetadataFreeModule_autoRemovesModule() throws ModuleSyncException {
+        ModuleBook localBook = new ModuleBook();
+        localBook.getOrCreate("CS1231").addTodo("Only Task");
+
+        DeleteCommand command = new DeleteCommand(1);
+        command.execute(localBook, stubStorage, stubUi);
+
+        assertEquals(0, localBook.countTotalTasks());
+        assertEquals(0, localBook.getModules().size());
+    }
+
+    @Test
+    void execute_deletingLastTaskInGradedModule_keepsModule() throws ModuleSyncException {
+        ModuleBook localBook = new ModuleBook();
+        localBook.getOrCreate("CS2100").addTodo("Only Task");
+        localBook.getOrCreate("CS2100").setGrade("A");
+
+        DeleteCommand command = new DeleteCommand(1);
+        command.execute(localBook, stubStorage, stubUi);
+
+        assertEquals(0, localBook.countTotalTasks());
+        assertEquals(1, localBook.getModules().size());
+        assertEquals("A", localBook.getModule("CS2100").getGrade());
+    }
 }

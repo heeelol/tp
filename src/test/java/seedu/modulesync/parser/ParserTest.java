@@ -204,6 +204,7 @@ class ParserTest {
         Parser parser = new Parser();
         assertTrue(parser.parse("add /mod CS1010S") instanceof AddModuleCommand);
         assertTrue(parser.parse("delete module /mod CS1010S") instanceof DeleteModuleCommand);
+        assertTrue(parser.parse("module delete /mod CS1010S") instanceof DeleteModuleCommand);
     }
 
     @Test
@@ -214,6 +215,9 @@ class ParserTest {
         
         assertThrows(ModuleSyncException.class, () -> parser.parse("delete module /mod"));
         assertThrows(ModuleSyncException.class, () -> parser.parse("delete module /mod !@#$"));
+        assertThrows(ModuleSyncException.class, () -> parser.parse("module delete"));
+        assertThrows(ModuleSyncException.class, () -> parser.parse("module delete /mod"));
+        assertThrows(ModuleSyncException.class, () -> parser.parse("module delete /mod !@#$"));
     }
 
     @Test

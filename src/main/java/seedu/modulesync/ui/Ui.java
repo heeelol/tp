@@ -81,7 +81,7 @@ public class Ui {
         System.out.println("--- Modules ---");
         System.out.println("  module add MOD");
         System.out.println("      Add a new module to the current semester.");
-        System.out.println("  module delete MOD");
+        System.out.println("  module delete /mod MOD");
         System.out.println("      Delete a module from the current semester.");
         System.out.println("  module archive MOD");
         System.out.println("      Archive a module.");

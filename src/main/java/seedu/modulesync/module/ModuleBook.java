@@ -1,6 +1,7 @@
 package seedu.modulesync.module;
 
 import java.util.Collection;
+import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
@@ -96,16 +97,31 @@ public class ModuleBook {
         }
 
         int currentIndex = 1;
-        for (Module module : modules.values()) {
+        Iterator<Map.Entry<String, Module>> entryIterator = modules.entrySet().iterator();
+        while (entryIterator.hasNext()) {
+            Map.Entry<String, Module> entry = entryIterator.next();
+            Module module = entry.getValue();
             int moduleTaskCount = module.getTasks().size();
             if (displayIndex >= currentIndex && displayIndex < currentIndex + moduleTaskCount) {
                 int indexInModule = displayIndex - currentIndex;
-                return module.getTasks().removeTask(indexInModule);
+                Task removedTask = module.getTasks().removeTask(indexInModule);
+                if (module.getTasks().size() == 0 && shouldAutoRemoveEmptyModule(module)) {
+                    entryIterator.remove();
+                }
+                return removedTask;
             }
             currentIndex += moduleTaskCount;
         }
 
         throw new ModuleSyncException("Task number does not exist: " + displayIndex);
+    }
+
+    /**
+     * Returns true when an empty module can be safely auto-removed as housekeeping.
+     * Modules with user-visible metadata are preserved even when they have no tasks.
+     */
+    private boolean shouldAutoRemoveEmptyModule(Module module) {
+        return !module.hasGrade() && module.getCredits() == 0 && !module.isArchived();
     }
 
     /**
