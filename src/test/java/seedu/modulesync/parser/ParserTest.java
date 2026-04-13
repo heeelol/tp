@@ -46,6 +46,14 @@ class ParserTest {
         // Empty task description after /task should return module add command
         assertTrue(parser.parse("add /mod CS2113 /task") instanceof AddModuleCommand);
         assertTrue(parser.parse("add /mod CS2113 /task    ") instanceof AddModuleCommand);
+
+        // Users may accidentally type optional notation brackets from documentation.
+        assertTrue(parser.parse("add /mod CS2113 /task Homework [/due 2026-04-15]")
+            instanceof AddDeadlineCommand);
+        assertTrue(parser.parse("add /mod CS2113 /task Homework [/w 20]")
+            instanceof AddTodoCommand);
+        assertTrue(parser.parse("add /mod CS2113 /task Homework [/due 2026-04-15] [/w 20]")
+            instanceof AddDeadlineCommand);
     }
 
     @Test

@@ -67,6 +67,8 @@ Adds a task under a module. If `/due` is provided, the task is recorded as a dea
 
 Format: `add /mod MODULE_CODE /task DESCRIPTION [/due YYYY-MM-DD[-HHmm]] [/w PERCENT]`
 
+Important: Square brackets in the format line indicate optional parts. Do not type the `[` or `]` characters.
+
 * `/due` is optional.
   * `YYYY-MM-DD` is interpreted as `23:59` on that date.
   * `YYYY-MM-DD-HHmm` specifies an exact time.

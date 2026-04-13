@@ -111,7 +111,8 @@ public class Parser {
     private static final int DATETIME_DASH_POSITION = 10;
 
     private static final String DATETIME_FORMAT = "yyyy-MM-dd HHmm";
-    private static final String ADD_USAGE = "Usage: add /mod MOD /task DESCRIPTION [/due YYYY-MM-DD]";
+    private static final String ADD_USAGE = "Usage: add /mod MOD /task DESCRIPTION [/due YYYY-MM-DD] "
+            + "(Square brackets indicate optional parts; do not type [ or ])";
     private static final String UNKNOWN_COMMAND_MSG = "Unknown command. Try: add /mod MOD /task TASK";
 
     /**
@@ -291,10 +292,10 @@ public class Parser {
         // Extract /task DESCRIPTION (up to next flag or end of string)
         int taskEndPos = remainder.length();
         if (duePos != -1 && duePos > taskPos) {
-            taskEndPos = Math.min(taskEndPos, duePos);
+            taskEndPos = Math.min(taskEndPos, adjustOptionalSegmentStart(remainder, duePos));
         }
         if (weightPos != -1 && weightPos > taskPos) {
-            taskEndPos = Math.min(taskEndPos, weightPos);
+            taskEndPos = Math.min(taskEndPos, adjustOptionalSegmentStart(remainder, weightPos));
         }
 
         int taskContentStart = taskPos + PREFIX_TASK_LENGTH + 1;
@@ -325,6 +326,7 @@ public class Parser {
 
         if (duePos != -1) {
             due = extractFlagValue(remainder, duePos, "due");
+            due = sanitizeOptionalNotationValue(due);
             if (due == null || due.isEmpty()) {
                 throw new ModuleSyncException(
                     "Invalid input! /due requires a date value. "
@@ -334,6 +336,7 @@ public class Parser {
 
         if (weightPos != -1) {
             weightageRaw = extractFlagValue(remainder, weightPos, "w");
+            weightageRaw = sanitizeOptionalNotationValue(weightageRaw);
             if (weightageRaw == null || weightageRaw.isEmpty()) {
                 throw new ModuleSyncException(
                     "Invalid input! /w requires an integer from 0 to 100.");
@@ -453,6 +456,28 @@ public class Parser {
             return input.substring(valueStartPos, valueEndPos).trim();
         }
         return "";
+    }
+
+    /**
+     * If the user typed bracket notation (e.g., "[/due ...]"), this returns the
+     * index of '[' so task extraction does not accidentally keep that bracket.
+     */
+    private int adjustOptionalSegmentStart(String input, int flagPos) {
+        if (flagPos <= 0) {
+            return flagPos;
+        }
+        return input.charAt(flagPos - 1) == '[' ? flagPos - 1 : flagPos;
+    }
+
+    /**
+     * Trims optional-notation brackets when users type forms like "[/due ...]".
+     */
+    private String sanitizeOptionalNotationValue(String raw) {
+        if (raw == null) {
+            return null;
+        }
+        String sanitized = raw.trim().replace('[', ' ').replace(']', ' ').trim();
+        return sanitized;
     }
 
     /**
@@ -601,7 +626,8 @@ public class Parser {
             
             return new AddDeadlineCommand(module, task, byDate, weightage);
         } catch (DateTimeParseException e) {
-            throw new ModuleSyncException("Invalid date format. Use yyyy-MM-dd or yyyy-MM-dd-HHmm");
+            throw new ModuleSyncException("Invalid date format. Use yyyy-MM-dd or yyyy-MM-dd-HHmm. "
+                    + "Do not type square brackets from documentation placeholders.");
         }
     }
 
