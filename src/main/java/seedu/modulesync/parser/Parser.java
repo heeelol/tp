@@ -251,7 +251,20 @@ public class Parser {
             throw new ModuleSyncException(ADD_USAGE);
         }
 
-        String[] tokens = remainder.split("/(?i)(?=(mod |task |due |w |grade ))");
+        // Find /task flag - if it exists, everything after it is the task description (terminal flag)
+        int taskFlagPos = findTaskFlagPosition(remainder);
+        String task = null;
+        String flagsPart = remainder;
+
+        if (taskFlagPos != -1) {
+            // /task found - split input into flags part (before /task) and task part (after /task)
+            flagsPart = remainder.substring(0, taskFlagPos).trim();
+            int taskContentStartPos = taskFlagPos + 1 + PREFIX_TASK_LENGTH; // +1 for the /
+            task = remainder.substring(taskContentStartPos).trim();
+        }
+
+        // Parse flags from the part before /task (/mod, /due, /w)
+        String[] tokens = flagsPart.split("/(?i)(?=(mod |due |w ))");
 
         int wCount = 0;
         int dueCount = 0;
@@ -271,7 +284,6 @@ public class Parser {
         }
 
         String module = extractFieldFromTokens(tokens, PREFIX_MOD, PREFIX_MOD_LENGTH);
-        String task = extractFieldFromTokens(tokens, PREFIX_TASK, PREFIX_TASK_LENGTH);
         String due = extractFieldFromTokens(tokens, PREFIX_DUE, PREFIX_DUE_LENGTH);
         String weightageRaw = extractFieldFromTokens(tokens, PREFIX_WEIGHTAGE, PREFIX_WEIGHTAGE_LENGTH);
 
@@ -294,6 +306,34 @@ public class Parser {
         }
 
         return new AddTodoCommand(module, task, weightage);
+    }
+
+    /**
+     * Finds the position of the /task flag in the input string.
+     * The search is case-insensitive to support /TASK, /Task, /task, etc.
+     * 
+     * @param input the input string to search
+     * @return the position of the "/" character that precedes "task ", 
+     *         or -1 if the /task flag is not found
+     */
+    private int findTaskFlagPosition(String input) {
+        // Search for /task (case-insensitive) followed by a space
+        int index = 0;
+        while (index < input.length()) {
+            if (input.charAt(index) == '/') {
+                // Check if this is /task (case-insensitive)
+                if (index + PREFIX_TASK_LENGTH + 1 <= input.length()) {
+                    int endPos = Math.min(index + PREFIX_TASK_LENGTH + 1, 
+                            input.length());
+                    String potentialFlag = input.substring(index + 1, endPos);
+                    if (potentialFlag.equalsIgnoreCase(PREFIX_TASK)) {
+                        return index;
+                    }
+                }
+            }
+            index++;
+        }
+        return -1;
     }
 
     /**

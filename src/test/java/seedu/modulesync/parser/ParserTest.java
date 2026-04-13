@@ -32,8 +32,9 @@ class ParserTest {
     @Test
     void parse_addCommand_returnsAddTodo() throws ModuleSyncException {
         Parser parser = new Parser();
+        // /task is now a terminal flag and must appear last
         assertTrue(parser.parse("add /mod CS2113 /task Week8") instanceof AddTodoCommand);
-        assertTrue(parser.parse("add /task Week8 /mod CS2113") instanceof AddTodoCommand);
+        assertTrue(parser.parse("add /mod CS2113 /task Task with /mod in description") instanceof AddTodoCommand);
     }
 
     @Test
