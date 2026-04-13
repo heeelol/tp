@@ -12,19 +12,32 @@ Participant "model:ModuleBook" as model
 Participant "storage:Storage" as storage
 
 user -> ui: mark 3
+activate ui
+
 ui -> parser: parseCommand("mark 3")
+activate parser
 parser -> cmd: new MarkCommand(3)
+deactivate parser
+
 ui -> cmd: execute(moduleBook, storage, ui)
+activate cmd
 
 cmd -> model: getTaskByDisplayIndex(3)
+activate model
 model --> cmd: Task
+deactivate model
 
 cmd -> cmd: task.setIsDone(true)
 
 cmd -> storage: save(moduleBook)
+activate storage
 storage --> cmd: void
+deactivate storage
 
 cmd -> ui: showTaskMarked(task)
+deactivate cmd
+
 ui --> user: Display confirmation
+deactivate ui
 
 @enduml

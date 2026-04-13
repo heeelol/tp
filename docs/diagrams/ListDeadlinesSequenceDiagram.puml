@@ -11,18 +11,29 @@ Participant "cmd:ListDeadlinesCommand" as cmd
 Participant "model:ModuleBook" as model
 
 user -> ui: list /deadlines
+activate ui
+
 ui -> parser: parseCommand("list /deadlines")
+activate parser
 parser -> cmd: new ListDeadlinesCommand()
+deactivate parser
+
 ui -> cmd: execute(moduleBook, storage, ui)
+activate cmd
 
 cmd -> model: getAllModules()
+activate model
 model --> cmd: List<Module>
+deactivate model
 
 cmd -> cmd: Collect all Deadline tasks
 cmd -> cmd: Group by urgency bucket
 cmd -> cmd: Sort within buckets
 
 cmd -> ui: showDeadlineList(groupedDeadlines)
+deactivate cmd
+
 ui --> user: Display grouped deadlines
+deactivate ui
 
 @enduml

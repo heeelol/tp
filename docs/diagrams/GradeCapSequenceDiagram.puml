@@ -14,30 +14,49 @@ Participant "storage:Storage" as storage
 
 == Recording a Grade ==
 user -> ui: grade /mod CS2113 /grade A- /credits 4
+activate ui
+
 ui -> parser: parseCommand(...)
+activate parser
 parser -> gradeCmd: new GradeCommand("CS2113", "A-", 4)
+deactivate parser
+
 ui -> gradeCmd: execute(moduleBook, storage, ui)
+activate gradeCmd
 
 gradeCmd -> model: getModule("CS2113")
+activate model
 model --> gradeCmd: Module
+deactivate model
 
 gradeCmd -> gradeCmd: module.setGrade("A-")
 gradeCmd -> gradeCmd: module.setCredits(4)
 
 gradeCmd -> storage: save(moduleBook)
+activate storage
 storage --> gradeCmd: void
+deactivate storage
 
 gradeCmd -> ui: showGradeRecorded(module)
-ui --> user: Display confirmation
+deactivate gradeCmd
+deactivate ui
 
 == Computing CAP ==
 user -> ui: cap
+activate ui
+
 ui -> parser: parseCommand("cap")
+activate parser
 parser -> capCmd: new CapCommand()
+deactivate parser
+
 ui -> capCmd: execute(moduleBook, storage, ui)
+activate capCmd
 
 capCmd -> model: getAllModules()
+activate model
 model --> capCmd: List<Module>
+deactivate model
 
 loop For each Module
   capCmd -> capCmd: Get grade and map to points
@@ -48,6 +67,9 @@ end
 capCmd -> capCmd: CAP = Σ(points×credits) / Σ(credits)
 
 capCmd -> ui: showCap(semesterCap, cumulativeCap)
+deactivate capCmd
+
 ui --> user: Display CAP
+deactivate ui
 
 @enduml

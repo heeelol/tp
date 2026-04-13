@@ -12,16 +12,26 @@ Participant "model:ModuleBook" as model
 Participant "task:Task" as task
 
 user -> ui: list /top 5
+activate ui
+
 ui -> parser: parseCommand("list /top 5")
+activate parser
 parser -> cmd: new ListTopCommand(5)
+deactivate parser
+
 ui -> cmd: execute(moduleBook, storage, ui)
+activate cmd
 
 cmd -> model: getAllModules()
+activate model
 model --> cmd: List<Module>
+deactivate model
 
 loop For each Task in each Module
   cmd -> task: calculatePriority()
+  activate task
   task --> cmd: priority score
+  deactivate task
   cmd -> cmd: Store (task, score) pair
 end
 
@@ -29,6 +39,9 @@ cmd -> cmd: Sort tasks by priority (descending)
 cmd -> cmd: Take top 5
 
 cmd -> ui: showTopTasks(topTasks)
+deactivate cmd
+
 ui --> user: Display with [Priority: N]
+deactivate ui
 
 @enduml

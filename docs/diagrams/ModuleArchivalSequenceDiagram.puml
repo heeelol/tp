@@ -12,19 +12,32 @@ Participant "model:ModuleBook" as model
 Participant "storage:Storage" as storage
 
 user -> ui: module archive /mod CS2113
+activate ui
+
 ui -> parser: parseCommand("module archive /mod CS2113")
+activate parser
 parser -> cmd: new ArchiveModuleCommand("CS2113")
+deactivate parser
+
 ui -> cmd: execute(moduleBook, storage, ui)
+activate cmd
 
 cmd -> model: getModule("CS2113")
+activate model
 model --> cmd: Module
+deactivate model
 
 cmd -> cmd: module.setArchived(true)
 
 cmd -> storage: save(moduleBook)
+activate storage
 storage --> cmd: void
+deactivate storage
 
 cmd -> ui: showModuleArchived("CS2113")
+deactivate cmd
+
 ui --> user: Display confirmation
+deactivate ui
 
 @enduml
