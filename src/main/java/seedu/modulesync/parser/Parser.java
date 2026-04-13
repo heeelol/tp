@@ -567,12 +567,13 @@ public class Parser {
             int value = Integer.parseInt(raw);
             if (value < MIN_WEIGHTAGE || value > MAX_WEIGHTAGE) {
                 throw new ModuleSyncException("Weightage must be between " + MIN_WEIGHTAGE
-                        + " and " + MAX_WEIGHTAGE + ".");
+                        + " and " + MAX_WEIGHTAGE + ". Enter the number only (e.g. 40, not 40%).");
             }
             return value;
         } catch (NumberFormatException e) {
             throw new ModuleSyncException("Weightage must be a whole number between "
-                    + MIN_WEIGHTAGE + " and " + MAX_WEIGHTAGE + ".");
+                    + MIN_WEIGHTAGE + " and " + MAX_WEIGHTAGE
+                    + ". Enter the number only (e.g. 40, not 40%).");
         }
     }
 
