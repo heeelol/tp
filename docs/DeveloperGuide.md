@@ -159,9 +159,9 @@ We chose `Integer` to keep the model lean and consistent with Java idiom for opt
 #### Implementation
 
 The List Deadlines feature provides a specialized view that displays only tasks with deadlines,
-sorted chronologically from earliest to latest. This helps users plan their week by seeing
-upcoming deadlines at a glance. The feature filters out to-do tasks without deadlines and
-presents the filtered list in priority order.
+grouped by actionability so users can decide what to work on next. The output order is:
+upcoming (future), then due today, then overdue. Within each group, deadlines are sorted
+consistently to keep the view predictable.
 
 The feature implements the following operations:
 
@@ -169,8 +169,8 @@ The feature implements the following operations:
   `/deadlines` is detected, it returns a `ListDeadlinesCommand` instead of the regular `ListCommand`.
 * `ListDeadlinesCommand#execute(ModuleBook, Storage, Ui)` — Executes the deadline listing by
   calling `Ui#showDeadlineList()`.
-* `Ui#showDeadlineList(ModuleBook)` — Collects all `Deadline` objects from all modules, sorts them
-  by due date in ascending order (earliest first), and displays them in a user-friendly format.
+* `Ui#showDeadlineList(ModuleBook)` — Collects all `Deadline` objects from all modules, groups them
+  into upcoming, due-today, and overdue buckets, then sorts and displays them in a user-friendly format.
 
 Given below is the workflow for the List Deadlines feature:
 
@@ -191,8 +191,9 @@ a `ListDeadlinesCommand` and returns it; otherwise, it returns the regular `List
 **Step 7.** `showDeadlineList()` iterates through all modules in the `ModuleBook` and collects all
 `Deadline` objects. For each deadline, it records the task number and module code.
 
-**Step 8.** The collected deadlines are sorted by their `LocalDateTime by` field in ascending order
-(earliest deadline first).
+**Step 8.** The collected deadlines are bucketed by urgency in this order:
+upcoming (future), due today, then overdue.
+Each bucket is then sorted deterministically before concatenating the final list.
 
 **Step 9.** Finally, the sorted deadlines are displayed to the user, showing module code, status,
 description, due date/time, and days remaining.
@@ -214,15 +215,15 @@ We chose the filter approach for consistency and extensibility.
 
 **Aspect: Sorting order for deadlines**
 
-* **Alternative 1 (Current choice): Sort by due date in ascending order (earliest first).**
-    * Pros: Users see the most urgent deadlines first, aiding prioritization.
-    * Cons: Does not highlight deadlines by urgency category (e.g., overdue vs. due soon vs. due later).
+* **Alternative 1 (Current choice): Group by urgency (upcoming, due today, overdue).**
+  * Pros: Keeps actionable deadlines at the top and prevents stale overdue tasks from burying near-term work.
+  * Cons: Slightly more sorting logic than a single chronological comparator.
 
-* **Alternative 2: Sort by days remaining with urgency grouping (overdue, due this week, etc.).**
-    * Pros: Provides visual urgency categorization.
-    * Cons: Adds complexity to sorting logic and UI formatting.
+* **Alternative 2: Sort all deadlines by due date in ascending order.**
+  * Pros: Minimal implementation complexity.
+  * Cons: Very old overdue tasks can dominate the top of the list and reduce planning usefulness.
 
-We chose ascending date order for simplicity and intuitive urgency ranking.
+We chose urgency grouping because it better matches how users prioritize work in semester planning.
 
 
 ### [Feature] List Not Done Tasks by Module (`list /notdone /mod MOD`)
@@ -723,7 +724,8 @@ module list
 
 Expected:
 - `list` shows all tasks numbered from 1 with module codes, type (`T`/`D`), done status, and weightage where set.
-- `list /deadlines` shows only deadline tasks sorted earliest-first.
+- `list /deadlines` shows only deadline tasks with upcoming/due-today entries first,
+  and overdue entries grouped at the end.
 - `list /top 3` shows the three tasks with the highest priority scores.
 - `list /notdone /mod CS2113` shows only incomplete CS2113 tasks, using **the same global indices as `list`**.
 - `module list` shows `CS2113 (4 task(s))` and `MA1521 (2 task(s))`.

@@ -4,6 +4,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
@@ -21,6 +22,9 @@ import seedu.modulesync.task.Deadline;
 import seedu.modulesync.task.Task;
 
 public class Ui {
+    private static final int DEADLINE_BUCKET_UPCOMING = 0;
+    private static final int DEADLINE_BUCKET_DUE_TODAY = 1;
+    private static final int DEADLINE_BUCKET_OVERDUE = 2;
     private static final String NO_GRADES_FOUND_MESSAGE =
             "No recorded grades found. A grade summary cannot be generated yet.";
     private static final int MODULE_COLUMN_WIDTH = 8;
@@ -276,8 +280,9 @@ public class Ui {
     }
 
     /**
-     * Displays all upcoming deadlines in chronological order.
-     * Helps the user plan their week by showing deadlines organized by proximity.
+     * Displays deadlines grouped for actionability.
+     * Ordering is: upcoming (future), due today, then overdue.
+     * Within each bucket, entries are sorted by due date and then task index.
      *
      * @param moduleBook the module book containing all modules and tasks
      */
@@ -310,19 +315,80 @@ public class Ui {
             return;
         }
 
-        // Sort by deadline (earliest first)
-        deadlines.sort((a, b) -> a.deadline.getBy().compareTo(b.deadline.getBy()));
-        
-        // Verify sorting: each deadline should be <= the next deadline
-        for (int i = 0; i < deadlines.size() - 1; i++) {
-            assert deadlines.get(i).deadline.getBy().compareTo(deadlines.get(i + 1).deadline.getBy()) <= 0
-                    : "Deadlines must be sorted in ascending order by due date";
+        LocalDateTime now = LocalDateTime.now();
+        LocalDate today = now.toLocalDate();
+
+        List<DeadlineEntry> upcomingDeadlines = new ArrayList<>();
+        List<DeadlineEntry> todayDeadlines = new ArrayList<>();
+        List<DeadlineEntry> overdueDeadlines = new ArrayList<>();
+
+        for (DeadlineEntry entry : deadlines) {
+            int bucket = classifyDeadlineBucket(entry.deadline, now, today);
+            if (bucket == DEADLINE_BUCKET_UPCOMING) {
+                upcomingDeadlines.add(entry);
+            } else if (bucket == DEADLINE_BUCKET_DUE_TODAY) {
+                todayDeadlines.add(entry);
+            } else {
+                overdueDeadlines.add(entry);
+            }
         }
 
-        System.out.println("Here are the upcoming deadlines:");
+        Comparator<DeadlineEntry> ascendingByDueThenTaskNumber =
+                Comparator.comparing((DeadlineEntry e) -> e.deadline.getBy())
+                        .thenComparingInt(e -> e.taskNumber);
+        Comparator<DeadlineEntry> overdueByMostRecentThenTaskNumber =
+                (first, second) -> {
+                    int byComparison = second.deadline.getBy().compareTo(first.deadline.getBy());
+                    if (byComparison != 0) {
+                        return byComparison;
+                    }
+                    return Integer.compare(first.taskNumber, second.taskNumber);
+                };
+
+        upcomingDeadlines.sort(ascendingByDueThenTaskNumber);
+        todayDeadlines.sort(ascendingByDueThenTaskNumber);
+        overdueDeadlines.sort(overdueByMostRecentThenTaskNumber);
+
+        deadlines.clear();
+        deadlines.addAll(upcomingDeadlines);
+        deadlines.addAll(todayDeadlines);
+        deadlines.addAll(overdueDeadlines);
+
+        // Verify grouping and ordering contract for long-term maintenance safety.
+        for (int i = 0; i < deadlines.size() - 1; i++) {
+            DeadlineEntry current = deadlines.get(i);
+            DeadlineEntry next = deadlines.get(i + 1);
+
+            int currentBucket = classifyDeadlineBucket(current.deadline, now, today);
+            int nextBucket = classifyDeadlineBucket(next.deadline, now, today);
+            assert currentBucket <= nextBucket : "Deadline buckets must be ordered as upcoming, today, overdue";
+
+            if (currentBucket == nextBucket) {
+                int comparison = currentBucket == DEADLINE_BUCKET_OVERDUE
+                        ? overdueByMostRecentThenTaskNumber.compare(current, next)
+                        : ascendingByDueThenTaskNumber.compare(current, next);
+                assert comparison <= 0 : "Deadlines within each bucket must be consistently ordered";
+            }
+        }
+
+        System.out.println("Here are your deadlines (upcoming, due today, then overdue):");
         for (DeadlineEntry entry : deadlines) {
             showTaskWithPriority(entry.deadline, entry.taskNumber);
         }
+    }
+
+    /**
+     * Classifies a deadline into display buckets.
+     */
+    private int classifyDeadlineBucket(Deadline deadline, LocalDateTime now, LocalDate today) {
+        LocalDateTime dueDateTime = deadline.getBy();
+        if (dueDateTime.isBefore(now)) {
+            return DEADLINE_BUCKET_OVERDUE;
+        }
+        if (dueDateTime.toLocalDate().isEqual(today)) {
+            return DEADLINE_BUCKET_DUE_TODAY;
+        }
+        return DEADLINE_BUCKET_UPCOMING;
     }
 
     /**

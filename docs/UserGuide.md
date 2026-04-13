@@ -88,7 +88,8 @@ Formats:
 
 * `list` lists all non-archived modules in the active semester.
 * `list /mod MODULE_CODE` lists tasks for a specific module.
-* `list /deadlines` lists only deadline tasks, sorted chronologically.
+* `list /deadlines` lists only deadline tasks, grouped by urgency:
+  upcoming first, then due today, then overdue.
 * `list /top NUMBER` lists the highest-priority tasks first.
 
 Examples:
