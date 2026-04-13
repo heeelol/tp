@@ -1,0 +1,34 @@
+@startuml ListTopTasksSequenceDiagram
+
+skinparam sequenceArrowThickness 2
+skinparam roundcorner 5
+skinparam maxmessagesize 60
+
+Actor User as user
+Participant "ui:Ui" as ui
+Participant "parser:Parser" as parser
+Participant "cmd:ListTopCommand" as cmd
+Participant "model:ModuleBook" as model
+Participant "task:Task" as task
+
+user -> ui: list /top 5
+ui -> parser: parseCommand("list /top 5")
+parser -> cmd: new ListTopCommand(5)
+ui -> cmd: execute(moduleBook, storage, ui)
+
+cmd -> model: getAllModules()
+model --> cmd: List<Module>
+
+loop For each Task in each Module
+  cmd -> task: calculatePriority()
+  task --> cmd: priority score
+  cmd -> cmd: Store (task, score) pair
+end
+
+cmd -> cmd: Sort tasks by priority (descending)
+cmd -> cmd: Take top 5
+
+cmd -> ui: showTopTasks(topTasks)
+ui --> user: Display with [Priority: N]
+
+@enduml

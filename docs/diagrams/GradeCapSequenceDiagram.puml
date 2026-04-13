@@ -1,0 +1,53 @@
+@startuml GradeCapSequenceDiagram
+
+skinparam sequenceArrowThickness 2
+skinparam roundcorner 5
+skinparam maxmessagesize 60
+
+Actor User as user
+Participant "ui:Ui" as ui
+Participant "parser:Parser" as parser
+Participant "cmd:GradeCommand" as gradeCmd
+Participant "cmd:CapCommand" as capCmd
+Participant "model:ModuleBook" as model
+Participant "storage:Storage" as storage
+
+== Recording a Grade ==
+user -> ui: grade /mod CS2113 /grade A- /credits 4
+ui -> parser: parseCommand(...)
+parser -> gradeCmd: new GradeCommand("CS2113", "A-", 4)
+ui -> gradeCmd: execute(moduleBook, storage, ui)
+
+gradeCmd -> model: getModule("CS2113")
+model --> gradeCmd: Module
+
+gradeCmd -> gradeCmd: module.setGrade("A-")
+gradeCmd -> gradeCmd: module.setCredits(4)
+
+gradeCmd -> storage: save(moduleBook)
+storage --> gradeCmd: void
+
+gradeCmd -> ui: showGradeRecorded(module)
+ui --> user: Display confirmation
+
+== Computing CAP ==
+user -> ui: cap
+ui -> parser: parseCommand("cap")
+parser -> capCmd: new CapCommand()
+ui -> capCmd: execute(moduleBook, storage, ui)
+
+capCmd -> model: getAllModules()
+model --> capCmd: List<Module>
+
+loop For each Module
+  capCmd -> capCmd: Get grade and map to points
+  capCmd -> capCmd: Get credits
+  capCmd -> capCmd: Add (points × credits) to numerator
+end
+
+capCmd -> capCmd: CAP = Σ(points×credits) / Σ(credits)
+
+capCmd -> ui: showCap(semesterCap, cumulativeCap)
+ui --> user: Display CAP
+
+@enduml

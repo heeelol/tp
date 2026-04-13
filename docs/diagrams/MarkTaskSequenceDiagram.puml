@@ -1,0 +1,30 @@
+@startuml MarkTaskSequenceDiagram
+
+skinparam sequenceArrowThickness 2
+skinparam roundcorner 5
+skinparam maxmessagesize 60
+
+Actor User as user
+Participant "ui:Ui" as ui
+Participant "parser:Parser" as parser
+Participant "cmd:MarkCommand" as cmd
+Participant "model:ModuleBook" as model
+Participant "storage:Storage" as storage
+
+user -> ui: mark 3
+ui -> parser: parseCommand("mark 3")
+parser -> cmd: new MarkCommand(3)
+ui -> cmd: execute(moduleBook, storage, ui)
+
+cmd -> model: getTaskByDisplayIndex(3)
+model --> cmd: Task
+
+cmd -> cmd: task.setIsDone(true)
+
+cmd -> storage: save(moduleBook)
+storage --> cmd: void
+
+cmd -> ui: showTaskMarked(task)
+ui --> user: Display confirmation
+
+@enduml

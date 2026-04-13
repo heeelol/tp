@@ -1,0 +1,28 @@
+@startuml ListDeadlinesSequenceDiagram
+
+skinparam sequenceArrowThickness 2
+skinparam roundcorner 5
+skinparam maxmessagesize 60
+
+Actor User as user
+Participant "ui:Ui" as ui
+Participant "parser:Parser" as parser
+Participant "cmd:ListDeadlinesCommand" as cmd
+Participant "model:ModuleBook" as model
+
+user -> ui: list /deadlines
+ui -> parser: parseCommand("list /deadlines")
+parser -> cmd: new ListDeadlinesCommand()
+ui -> cmd: execute(moduleBook, storage, ui)
+
+cmd -> model: getAllModules()
+model --> cmd: List<Module>
+
+cmd -> cmd: Collect all Deadline tasks
+cmd -> cmd: Group by urgency bucket
+cmd -> cmd: Sort within buckets
+
+cmd -> ui: showDeadlineList(groupedDeadlines)
+ui --> user: Display grouped deadlines
+
+@enduml

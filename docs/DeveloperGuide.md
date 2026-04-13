@@ -182,6 +182,74 @@ The following activity diagram maps every decision point in the validation flow.
 
 ---
 
+### Marking and Unmarking Tasks
+
+#### Overview
+
+The mark/unmark feature allows users to toggle a task's completion status without losing any data.
+`mark TASK_NUMBER` marks a task complete; `unmark TASK_NUMBER` reverts it to incomplete. Unlike deletion, marking preserves all task metadata (deadlines, weightage, module affiliation, description) for historical reference and CAP calculations.
+
+Two commands implement this feature:
+- `mark TASK_NUMBER` — marks a specific task as done
+- `mark /mod MODULE_CODE /all` — marks all tasks in a module as done
+- `unmark TASK_NUMBER` — marks a task as incomplete
+
+#### Data Model
+
+`Task` holds a `isDone: boolean` field that tracks completion state. Both `Todo` and `Deadline` subclasses inherit this field. There is no separate state table or audit log — the single boolean is sufficient and efficient for the CLI use case.
+
+**State transitions:**
+- Initial: `isDone = false` (all new tasks start incomplete)
+- After `mark`: `isDone = true`
+- After `unmark`: `isDone = false`
+- Display: `[ ]` when incomplete, `[X]` when complete
+
+#### Execution Flow
+
+The following sequence diagram illustrates the interactions when the user executes `mark 3`:
+
+<img src="images/MarkTaskSequenceDiagram.png" alt="Sequence diagram for the mark command" />
+
+> Generated from [`docs/diagrams/MarkTaskSequenceDiagram.puml`](diagrams/MarkTaskSequenceDiagram.puml)
+
+The `unmark` command follows the identical path — `Parser` → `UnmarkCommand` → 
+`ModuleBook.getTaskByDisplayIndex()` → `task.setIsDone(false)` → `Storage.save()` → 
+`Ui.showTaskMarked()`. The bulk `mark /mod MOD /all` command iterates over all tasks in the target module and applies `setIsDone(true)` to each.
+
+#### Design Considerations
+
+**Aspect: Bidirectional state vs. deletion**
+
+* **Alternative 1 (current choice): Reversible mark/unmark; data is never lost.**
+  * Pros: Users can recover from marking mistakes; historical task data aids in reflection and CAP calculations.
+  * Cons: Requires explicit `delete` command to truly remove a task.
+
+* **Alternative 2: Marking a task removes it from the list permanently.**
+  * Pros: Completes the task and cleans the workspace in one action.
+  * Cons: No undo; if a task is marked prematurely, it cannot be retrieved.
+
+**Aspect: Storing `isDone` on `Task` vs. a `CompletedTask` set on `Module`**
+
+* **Alternative 1 (current choice): Field on `Task`.**
+  * Pros: Self-contained; each task owns its state.
+  * Cons: `isDone` is immutable once set (no separate storage of the state change timestamp).
+
+* **Alternative 2: `Set<Task>` or `Map<Task, Timestamp>` on `Module`.**
+  * Pros: Centralises completion tracking; can store completion time for analytics.
+  * Cons: Task removal must also remove the task from the completion set; couples `Module` and `Task` tightly.
+
+**Aspect: Atomic persistence on state change**
+
+* **Alternative 1 (current choice): `Storage.save()` is called immediately after `setIsDone()`.**
+  * Pros: State is durable immediately; guarantees no data loss if the app crashes.
+  * Cons: Every state change triggers an I/O operation (modest performance cost for CLI).
+
+* **Alternative 2: Batch state changes and persist at logout.**
+  * Pros: Reduces I/O overhead.
+  * Cons: State is lost if the app crashes; violates the "no-crash data loss" NFR.
+
+---
+
 ### Listing and Filtering Tasks
 
 All `list` sub-commands (`list /deadlines`, `list /notdone`, `list /top`) follow the same Command
@@ -194,6 +262,12 @@ diagram. This section documents only the design decisions that are specific to e
 `Ui#showDeadlineList` collects all `Deadline` objects from the `ModuleBook`, groups them into three
 urgency buckets — overdue, due today, and upcoming — and sorts each bucket chronologically before
 concatenating the final output.
+
+The following sequence diagram illustrates the interactions when the user executes `list /deadlines`:
+
+<img src="images/ListDeadlinesSequenceDiagram.png" alt="Sequence diagram for the list /deadlines command" />
+
+> Generated from [`docs/diagrams/ListDeadlinesSequenceDiagram.puml`](diagrams/ListDeadlinesSequenceDiagram.puml)
 
 **Design Considerations**
 
@@ -323,6 +397,12 @@ calculation. Zero-credit modules are also excluded to avoid division-by-zero art
 If the total credits across all modules in the current semester exceed 32, `Ui#showHighSemesterCreditsWarning`
 is triggered to alert the user to an unusually heavy workload.
 
+The following sequence diagram illustrates the flow for recording a grade and computing CAP:
+
+<img src="images/GradeCapSequenceDiagram.png" alt="Sequence diagram for grade recording and CAP computation" />
+
+> Generated from [`docs/diagrams/GradeCapSequenceDiagram.puml`](diagrams/GradeCapSequenceDiagram.puml)
+
 **Design Considerations**
 
 **Aspect: On-the-fly calculation vs. caching**
@@ -415,6 +495,36 @@ its tasks from the map. The deletion is persisted immediately via `Storage#save`
 
 ---
 
+### Archiving and Unarchiving Modules
+
+Modules can be archived within the active semester without being deleted. An archived module is hidden from `list` and `list /deadlines` views but remains queryable for statistics and grade tracking.
+
+Two commands implement this:
+- `module archive /mod MOD` — marks a module as archived
+- `module unarchive /mod MOD` — restores an archived module
+
+`Module` stores a boolean `archived` flag. When archived is `true`, the module is excluded from default listing but still contributes to `grades list` and `semester stats`. `ModuleBook#getArchivedModules()` and `ModuleBook#getActiveModules()` provide filtered views.
+
+The following sequence diagram illustrates the archival flow:
+
+<img src="images/ModuleArchivalSequenceDiagram.png" alt="Sequence diagram for the module archive command" />
+
+> Generated from [`docs/diagrams/ModuleArchivalSequenceDiagram.puml`](diagrams/ModuleArchivalSequenceDiagram.puml)
+
+**Design Considerations**
+
+**Aspect: Archival vs. deletion**
+
+* **Alternative 1 (current choice): Soft delete via boolean flag; module remains in memory and storage.**
+  * Pros: Module data (tasks, grades) is preserved for historical references; archival is immediately reversible.
+  * Cons: Archived modules still occupy storage; queries must filter by archived status.
+
+* **Alternative 2: Hard delete; use `delete module /mod MOD` to permanently remove.**
+  * Pros: Cleaner state; no need to filter archived modules.
+  * Cons: Irreversible; loses historical data for CAP and grade calculations.
+
+---
+
 ### Managing the Semester Lifecycle
 
 The semester lifecycle encompasses four operations, each handled by a dedicated
@@ -480,6 +590,12 @@ creation, archiving, and switching — in a single run:
 The priority ranking feature allows users to surface their most urgent work with `list /top N`.
 Each task carries a **priority score** — a single integer displayed as `[Priority: N]` — computed
 from two inputs: the task's weightage and, for deadline tasks, how soon the deadline falls.
+
+The following sequence diagram shows how `list /top` iterates across modules, calculates priority scores, and returns the top N tasks:
+
+<img src="images/ListTopTasksSequenceDiagram.png" alt="Sequence diagram for the list /top command" />
+
+> Generated from [`docs/diagrams/ListTopTasksSequenceDiagram.puml`](diagrams/ListTopTasksSequenceDiagram.puml)
 
 #### Priority Score Formula
 

@@ -1,0 +1,30 @@
+@startuml ModuleArchivalSequenceDiagram
+
+skinparam sequenceArrowThickness 2
+skinparam roundcorner 5
+skinparam maxmessagesize 60
+
+Actor User as user
+Participant "ui:Ui" as ui
+Participant "parser:Parser" as parser
+Participant "cmd:ArchiveModuleCommand" as cmd
+Participant "model:ModuleBook" as model
+Participant "storage:Storage" as storage
+
+user -> ui: module archive /mod CS2113
+ui -> parser: parseCommand("module archive /mod CS2113")
+parser -> cmd: new ArchiveModuleCommand("CS2113")
+ui -> cmd: execute(moduleBook, storage, ui)
+
+cmd -> model: getModule("CS2113")
+model --> cmd: Module
+
+cmd -> cmd: module.setArchived(true)
+
+cmd -> storage: save(moduleBook)
+storage --> cmd: void
+
+cmd -> ui: showModuleArchived("CS2113")
+ui --> user: Display confirmation
+
+@enduml
