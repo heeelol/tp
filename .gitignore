@@ -10,8 +10,6 @@ src/main/resources/docs/
 
 # Ignore user data files
 data/
-modulesync.log
-modulesync.log.lck
 
 # Log files
 modulesync.log
