@@ -44,12 +44,28 @@ Given below are my contributions to the project.
 
 **Justification:** Perfectly matches real university registration constraints while acting as an invisible safety bumper protecting students from catastrophic mathematical typos in their workload planning.
 
+### Feature 6: List Semesters (`semester list`)
+**What it does:** Allows the user to view a numbered list of all tracked semesters alongside their current status (Active or Archived).
+
+**Justification:** Users managing multiple semesters need a quick way to see which semesters exist and which one is currently active, without having to inspect the file system directly.
+
+**Highlights:** Implemented `ListSemesterCommand` extending `SemesterCommand`, updated the `Parser` to intercept the `semester list` sub-command, and added `Ui#showSemesterList` with clear `[Active]`/`[Archived]` status labels.
+
+### Feature 7: CAP Calculator (`cap`)
+**What it does:** Computes both the current semester CAP and the cumulative CAP across all semesters, using the standard NUS 5.0 grade-point scale.
+
+**Justification:** Students frequently need to check their academic standing. By integrating CAP calculation directly into the task manager, they no longer need to maintain a separate spreadsheet.
+
+**Highlights:** Implemented `CapCommand` which iterates across all semesters, maps letter grades via `GradePointScale`, correctly excludes CS/CU and ungraded modules, and handles the zero-credit edge case gracefully. Both semester and cumulative CAP are displayed to two decimal places.
+
 ## Code Contributed
-[RepoSense link](#) 
+[RepoSense link](https://nus-cs2113-ay2526s2.github.io/tp-dashboard/?search=codefuul&breakdown=true&sort=groupTitle%20dsc&sortWithin=title&since=2026-02-21&timeframe=commit&mergegroup=&groupSelect=groupByRepos&checkedFileTypes=docs~functional-code~test-code~other)
 
 ## Project Management
 
-- [Add any project management contributions here]
+- Managed issue tracking for personal features (Issues #6, #67, #72) from creation through to closing.
+- Ensured all code contributions passed Gradle Checkstyle checks before integration.
+- Coordinated with teammates on shared data model changes (e.g., `Module` grade/credits fields) to avoid merge conflicts.
 
 ## Enhancements to Existing Features
 
