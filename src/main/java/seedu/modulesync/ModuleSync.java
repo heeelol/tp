@@ -1,7 +1,13 @@
 package seedu.modulesync;
 
+import java.io.IOException;
 import java.util.Scanner;
+import java.util.logging.ConsoleHandler;
+import java.util.logging.FileHandler;
+import java.util.logging.Handler;
+import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.logging.SimpleFormatter;
 
 import seedu.modulesync.command.Command;
 import seedu.modulesync.exception.ModuleSyncException;
@@ -133,9 +139,40 @@ public class ModuleSync {
     }
 
     /**
+     * Configures the JUL root logger to write exclusively to {@code modulesync.log}.
+     *
+     * <p>Java's root logger ships with a {@link ConsoleHandler} attached by default,
+     * which causes every INFO/WARNING log record to appear on {@code stderr} — visible
+     * in the user's terminal. This method removes that handler and replaces it with a
+     * {@link FileHandler} so logging remains silent to the user while still being
+     * captured for debugging.
+     */
+    private static void configureLogging() {
+        Logger rootLogger = Logger.getLogger("");
+
+        // Remove every handler already attached (removes the default ConsoleHandler)
+        for (Handler handler : rootLogger.getHandlers()) {
+            rootLogger.removeHandler(handler);
+        }
+
+        try {
+            FileHandler fileHandler = new FileHandler("modulesync.log", true);
+            fileHandler.setFormatter(new SimpleFormatter());
+            fileHandler.setLevel(Level.ALL);
+            rootLogger.addHandler(fileHandler);
+            rootLogger.setLevel(Level.ALL);
+        } catch (IOException e) {
+            // If we cannot open the log file, fall back to a silent no-op rather than
+            // printing to the terminal — the application must still run cleanly.
+            rootLogger.setLevel(Level.OFF);
+        }
+    }
+
+    /**
      * Main entry-point for the ModuleSync application.
      */
     public static void main(String[] args) {
+        configureLogging();
         try {
             new ModuleSync().run();
         } catch (ModuleSyncException e) {

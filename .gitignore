@@ -11,6 +11,10 @@ src/main/resources/docs/
 # Ignore user data files
 data/
 
+# Log files
+modulesync.log
+modulesync.log.lck
+
 # MacOS custom attributes files created by Finder
 .DS_Store
 *.iml

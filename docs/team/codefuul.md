@@ -54,7 +54,7 @@ Given below are my contributions to the project.
 ## Enhancements to Existing Features
 
 - **Defensive Programming:** Added defensive `assert` statements to `DeleteCommand` to enforce internal invariants and ensure the system state remains consistent. I also enabled these assertions in the Gradle build process to verify them during development and testing.
-- **Logging Integration:** Integrated Java's `java.util.logging.Logger` with a `FileHandler` to track system execution and errors. This silently records execution details in a background `duke.log` file without polluting the user's active CLI interface.
+- **Logging Integration:** Integrated Java's `java.util.logging.Logger` with a `FileHandler` to track system execution and errors. This silently records execution details in a background `modulesync.log` file without polluting the user's active CLI interface.
 
 ## Documentation
 
@@ -65,7 +65,7 @@ Given below are my contributions to the project.
 
 ### Developer Guide
 - Authored the implementation details for the `check /urgent` and `setdeadline` commands, including the sequence of interactions between the `Parser`, `Command`, and `TaskList` components.
-- Documented the system-wide logging strategy using `java.util.logging.Logger` and the usage of the `duke.log` file for debugging.
+- Documented the system-wide logging strategy using `java.util.logging.Logger` and the usage of the `modulesync.log` file for debugging.
 - Drafted the API usage documentation regarding Explicit Module Creation and Bounding Credit Lifecycles inside the Developer Guide implementation blocks.
 
 ### About Us

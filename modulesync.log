@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE log SYSTEM "logger.dtd">
+<log>
+<record>
+  <date>2026-03-18T13:00:17.284999600Z</date>
+  <millis>1773838817284</millis>
+  <nanos>999600</nanos>
+  <sequence>0</sequence>
+  <logger>seedu.modulesync.Duke</logger>
+  <level>INFO</level>
+  <class>seedu.modulesync.Duke</class>
+  <method>main</method>
+  <thread>1</thread>
+  <message>Application successfully starts</message>
+</record>
+</log>
+Apr 11, 2026 4:29:48 PM seedu.modulesync.command.DeleteCommand execute
+WARNING: Invalid task index: 99
+seedu.modulesync.exception.ModuleSyncException: Task number does not exist: 99
+	at seedu.modulesync.module.ModuleBook.removeTaskByDisplayIndex(ModuleBook.java:108)
+	at seedu.modulesync.command.DeleteCommand.execute(DeleteCommand.java:42)
+	at seedu.modulesync.ModuleSync.run(ModuleSync.java:99)
+	at seedu.modulesync.ModuleSync.main(ModuleSync.java:140)
+
+Apr 13, 2026 7:13:28 PM seedu.modulesync.semester.SemesterBook addSemester
+FINE: Registered semester: AY2526-S2
+Apr 13, 2026 7:13:28 PM seedu.modulesync.storage.SemesterStorage loadOneSemesterFile
+FINE: Loaded semester: AY2526-S2
+Apr 13, 2026 7:13:28 PM seedu.modulesync.semester.SemesterBook addSemester
+FINE: Registered semester: AY2627-S1
+Apr 13, 2026 7:13:28 PM seedu.modulesync.storage.SemesterStorage loadOneSemesterFile
+FINE: Loaded semester: AY2627-S1
+Apr 13, 2026 7:13:28 PM seedu.modulesync.semester.SemesterBook addSemester
+FINE: Registered semester: default
+Apr 13, 2026 7:13:28 PM seedu.modulesync.storage.SemesterStorage loadOneSemesterFile
+FINE: Loaded semester: default
+Apr 13, 2026 7:13:28 PM seedu.modulesync.semester.SemesterBook setCurrentSemester
+FINE: Current semester set to: AY2627-S1
+Apr 13, 2026 7:13:55 PM seedu.modulesync.semester.SemesterBook setCurrentSemester
+FINE: Current semester set to: AY2526-S2
+Apr 13, 2026 7:13:55 PM seedu.modulesync.storage.SemesterStorage saveSemester
+FINE: Saved semester file: AY2526-S2.txt
+Apr 13, 2026 7:13:55 PM seedu.modulesync.storage.SemesterStorage saveSemester
+FINE: Saved semester file: AY2627-S1.txt
+Apr 13, 2026 7:13:55 PM seedu.modulesync.storage.SemesterStorage saveSemester
+FINE: Saved semester file: default.txt
+Apr 13, 2026 7:13:55 PM seedu.modulesync.storage.SemesterStorage save
+FINE: SemesterBook saved successfully.
+Apr 13, 2026 7:14:08 PM seedu.modulesync.semester.SemesterBook addSemester
+FINE: Registered semester: AY2425-S1
+Apr 13, 2026 7:14:08 PM seedu.modulesync.semester.SemesterBook switchOrCreate
+INFO: Created new semester: AY2425-S1
+Apr 13, 2026 7:14:08 PM seedu.modulesync.semester.SemesterBook setCurrentSemester
+FINE: Current semester set to: AY2425-S1
+Apr 13, 2026 7:14:08 PM seedu.modulesync.storage.SemesterStorage saveSemester
+FINE: Saved semester file: AY2526-S2.txt
+Apr 13, 2026 7:14:08 PM seedu.modulesync.storage.SemesterStorage saveSemester
+FINE: Saved semester file: AY2627-S1.txt
+Apr 13, 2026 7:14:08 PM seedu.modulesync.storage.SemesterStorage saveSemester
+FINE: Saved semester file: default.txt
+Apr 13, 2026 7:14:08 PM seedu.modulesync.storage.SemesterStorage saveSemester
+FINE: Saved semester file: AY2425-S1.txt
+Apr 13, 2026 7:14:08 PM seedu.modulesync.storage.SemesterStorage save
+FINE: SemesterBook saved successfully.

@@ -525,7 +525,7 @@ The following sequence diagram illustrates the interactions when the user execut
 
 #### Implementation
 
-The application integrates `java.util.logging.Logger` combined with a `FileHandler` to silently write execution flows and caught exceptions to a background `duke.log` file. This ensures that debugging details are captured without polluting the CLI UI directly.
+The application integrates `java.util.logging.Logger` combined with a `FileHandler` to silently write execution flows and caught exceptions to a background `modulesync.log` file. This ensures that debugging details are captured without polluting the CLI UI directly.
 
 Furthermore, Java `assert` statements have been added in critical areas, such as the `DeleteCommand`, to enforce internal invariants and assumptions before executing destructive actions. This defensive programming approach prevents unintended corruption of the `ModuleBook` or application state.
 
@@ -543,7 +543,7 @@ The following sequence diagram illustrates the interactions involved when the sy
 
 **Aspect: Destination for system logs**
 
-* **Alternative 1 (Current choice): Log to a background file (`duke.log`).**
+* **Alternative 1 (Current choice): Log to a background file (`modulesync.log`).**
   * Pros: Maintains a clean, distraction-free user experience in the terminal while preserving diagnostic data for troubleshooting.
   * Cons: Requires developers to check an external file to view logs.
 
