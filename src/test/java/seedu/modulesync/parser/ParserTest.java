@@ -43,6 +43,9 @@ class ParserTest {
         // /due before /task creates a deadline
         assertTrue(parser.parse("add /mod CS2113 /due 2026-04-15 /task Project") 
             instanceof AddDeadlineCommand);
+        // Empty task description after /task should return module add command
+        assertTrue(parser.parse("add /mod CS2113 /task") instanceof AddModuleCommand);
+        assertTrue(parser.parse("add /mod CS2113 /task    ") instanceof AddModuleCommand);
     }
 
     @Test

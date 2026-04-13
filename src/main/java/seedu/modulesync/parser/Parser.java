@@ -293,6 +293,13 @@ public class Parser {
         }
 
         int taskContentStart = taskPos + PREFIX_TASK_LENGTH + 1;
+        // Clamp taskContentStart to valid range and ensure it doesn't exceed taskEndPos
+        if (taskContentStart > remainder.length()) {
+            taskContentStart = remainder.length();
+        }
+        if (taskContentStart > taskEndPos) {
+            taskContentStart = taskEndPos;
+        }
         String task = remainder.substring(taskContentStart, taskEndPos).trim();
 
         // Check for duplicate /due flags
