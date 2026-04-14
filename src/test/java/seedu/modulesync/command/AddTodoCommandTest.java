@@ -1,6 +1,7 @@
 package seedu.modulesync.command;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.ByteArrayInputStream;
@@ -54,5 +55,39 @@ class AddTodoCommandTest {
         assertTrue(storage.saved);
         var tasks = moduleBook.getModules().iterator().next().getTasks().asUnmodifiableList();
         assertEquals("Week8", tasks.get(0).getDescription());
+        assertNull(tasks.get(0).getWeightage());
+    }
+
+    @Test
+    void execute_addsTaskWithWeightageAndSaves(@TempDir Path tempDir) throws ModuleSyncException {
+        ModuleBook moduleBook = new ModuleBook();
+        TestStorage storage = new TestStorage(tempDir.resolve("modules.txt"));
+        TestUi ui = new TestUi();
+
+        AddTodoCommand command = new AddTodoCommand("CS2113", "Final Project", 40);
+        command.execute(moduleBook, storage, ui);
+
+        var tasks = moduleBook.getModules().iterator().next().getTasks().asUnmodifiableList();
+        assertEquals(40, tasks.get(0).getWeightage());
+        assertTrue(storage.saved);
+    }
+
+    @Test
+    void execute_addsTaskWithBoundaryWeightages(@TempDir Path tempDir) throws ModuleSyncException {
+        ModuleBook moduleBook = new ModuleBook();
+        TestStorage storage = new TestStorage(tempDir.resolve("modules.txt"));
+        TestUi ui = new TestUi();
+
+        new AddTodoCommand("CS2113", "Zero weight task", 0).execute(moduleBook, storage, ui);
+        new AddTodoCommand("CS2113", "Full weight task", 100).execute(moduleBook, storage, ui);
+
+        var tasks = moduleBook.getModules().iterator().next().getTasks().asUnmodifiableList();
+        assertEquals(0, tasks.get(0).getWeightage());
+        assertEquals(100, tasks.get(1).getWeightage());
+    }
+
+    @Test
+    void isMutating_returnsTrue() {
+        assertTrue(new AddTodoCommand("CS2113", "Task").isMutating());
     }
 }
