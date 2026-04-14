@@ -11,5 +11,5 @@ Useful links:
 * [codefuul](team/codefuul.md)
 * [heeelol](team/heeelol.md)
 * [huang-hau-shuan](team/huang-hau-shuan.md)
-* [johndoe](team/johndoe.md)
+* [fromtyn](team/fromtyn.md)
 * [Notchennie1](team/Notchennie1.md)
